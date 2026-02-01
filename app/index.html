@@ -338,9 +338,8 @@
         window.__ACCESS_GRANTED__ = false;
 
         async function validateAccess() {
-            // Modo Offline: se a variável estiver setada, pula validação
+            // Offline Mode: bypass validation
             if (window.LEXOPS_OFFLINE_MODE === true) {
-                console.log('Modo Offline: Validação de token ignorada.');
                 document.getElementById('protectedContent').style.display = 'flex';
                 return;
             }
@@ -752,18 +751,21 @@
     <script>
         const LEXOPS_LOGO_URL = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 320 90'%3E%3Cdefs%3E%3ClinearGradient id='g1' x1='0%25' y1='0%25' x2='100%25' y2='100%25'%3E%3Cstop offset='0%25' style='stop-color:%235b21b6;stop-opacity:1'/%3E%3Cstop offset='50%25' style='stop-color:%237c3aed;stop-opacity:1'/%3E%3Cstop offset='100%25' style='stop-color:%23a855f7;stop-opacity:1'/%3E%3C/linearGradient%3E%3Cfilter id='shadow'%3E%3CfeDropShadow dx='0' dy='4' stdDeviation='8' flood-opacity='0.4'/%3E%3C/filter%3E%3C/defs%3E%3Crect width='320' height='90' fill='url(%23g1)' rx='12'/%3E%3Cg filter='url(%23shadow)'%3E%3Ctext x='160' y='48' font-family='Inter,Arial,sans-serif' font-size='38' font-weight='900' fill='white' text-anchor='middle' letter-spacing='3'%3ELexOps%3C/text%3E%3Ctext x='160' y='72' font-family='Inter,Arial,sans-serif' font-size='13' font-weight='700' fill='rgba(255,255,255,0.85)' text-anchor='middle' letter-spacing='5'%3EINSIGHT%3C/text%3E%3C/g%3E%3C/svg%3E";
 
-        var dStore = []; 
-        var customCharts = [];
-        var colMapping = {};
-        var filterState = {}; 
-        var activeChartFilters = {};
-        var logoData = { office: null, client: null, lexops: LEXOPS_LOGO_URL };
-        var themeConfig = { brand: '#4f46e5', paletteName: 'indigo', palette: ['#4f46e5', '#6366f1', '#818cf8', '#a5b4fc', '#c7d2fe'] };
-        var layoutTheme = 'minimal';
-        var chartInstances = {};
-        var rawHeaders = [];
-        var numericColumns = [];
-        var mappedValueColumn = null;
+        // ═══════════════════════════════════════════════════════════════════════
+        // GLOBAL STATE (Mutable Application State)
+        // ═══════════════════════════════════════════════════════════════════════
+        let dStore = []; 
+        let customCharts = [];
+        let colMapping = {};
+        let filterState = {}; 
+        let activeChartFilters = {};
+        let logoData = { office: null, client: null, lexops: LEXOPS_LOGO_URL };
+        let themeConfig = { brand: '#4f46e5', paletteName: 'indigo', palette: ['#4f46e5', '#6366f1', '#818cf8', '#a5b4fc', '#c7d2fe'] };
+        let layoutTheme = 'minimal';
+        let chartInstances = {};
+        let rawHeaders = [];
+        let numericColumns = [];
+        let mappedValueColumn = null;
 
         const PALETTES = {
             indigo: ['#4f46e5', '#6366f1', '#818cf8', '#a5b4fc', '#c7d2fe'],
@@ -852,8 +854,54 @@
         function fmtMoney(v) { return v.toLocaleString('pt-BR',{style:'currency',currency:'BRL'}); }
 
         // Initialize immediately when scripts load
+        // ═══════════════════════════════════════════════════════════════════════
+        // HIGH-PERFORMANCE APPLICATION INITIALIZATION
+        // Architecture: Event-Driven, Memory-Safe, Zero-Latency
+        // ═══════════════════════════════════════════════════════════════════════
         (function() {
-            // Wait for DOM to be ready
+            'use strict';
+            
+            // Utility: Debounce para inputs de texto (evita sobrecarga da Main Thread)
+            const debounce = (fn, delay = 150) => {
+                let timeoutId;
+                return (...args) => {
+                    clearTimeout(timeoutId);
+                    timeoutId = setTimeout(() => fn(...args), delay);
+                };
+            };
+
+            // Utility: Validação de arquivo
+            const validateFile = (file, allowedExtensions, maxSizeMB = 50) => {
+                if (!file) throw new Error('Nenhum arquivo selecionado');
+                
+                const extension = file.name.split('.').pop().toLowerCase();
+                if (!allowedExtensions.includes(extension)) {
+                    throw new Error(`Formato inválido. Permitidos: ${allowedExtensions.join(', ')}`);
+                }
+                
+                const maxSizeBytes = maxSizeMB * 1024 * 1024;
+                if (file.size > maxSizeBytes) {
+                    throw new Error(`Arquivo muito grande. Máximo: ${maxSizeMB}MB`);
+                }
+                
+                return true;
+            };
+
+            // Utility: Feedback visual durante operações pesadas
+            const setLoadingState = (isLoading) => {
+                document.body.style.cursor = isLoading ? 'wait' : 'default';
+            };
+
+            // Utility: Atualização de CSS Var com requestAnimationFrame (sincroniza com monitor)
+            const updateCSSVar = (varName, value) => {
+                requestAnimationFrame(() => {
+                    document.documentElement.style.setProperty(varName, value);
+                });
+            };
+
+            // ═══════════════════════════════════════════════════════════════════════
+            // MAIN INITIALIZATION ENTRY POINT
+            // ═══════════════════════════════════════════════════════════════════════
             if (document.readyState === 'loading') {
                 document.addEventListener('DOMContentLoaded', initializeApp);
             } else {
@@ -861,54 +909,155 @@
             }
             
             function initializeApp() {
-                console.log('Initializing app...');
-                
-                // File input for data import
-                const fileInput = document.getElementById('fileInput');
-                console.log('fileInput found:', !!fileInput);
-                if(fileInput) {
-                    fileInput.addEventListener('change', function(e) {
-                        console.log('File selected:', e.target.files[0]);
-                        const f = e.target.files[0];
-                        if(!f) return;
-                        const r = new FileReader();
-                        r.onload = function(ev) {
-                            try {
-                                const wb = XLSX.read(ev.target.result, {type:'array'});
-                                const raw = XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]]);
-                                if(!raw || raw.length===0) throw new Error("Vazio");
-                                rawHeaders = Object.keys(raw[0]);
-                                window._tempRaw = raw;
-                                showMapping();
-                            } catch(err) { 
-                                alert("Erro na leitura do arquivo: " + err.message); 
-                                console.error(err);
-                            }
-                        };
-                        r.readAsArrayBuffer(f);
-                    });
-                }
+                try {
+                    // Critical dependency check
+                    if (!window.XLSX) {
+                        throw new Error('SheetJS library not loaded. Critical failure.');
+                    }
 
-                // Logo uploads
-                ['logoOffice', 'logoClient', 'lexopsMainLogo'].forEach(function(id) {
-                    const el = document.getElementById(id);
-                    console.log(id + ' found:', !!el);
-                    if(el) {
-                        el.addEventListener('change', function(e) {
-                            console.log('Logo file selected for ' + id);
-                            const r = new FileReader();
-                            r.onload = function(ev) { 
-                                if(id.includes('Office')) logoData.office = ev.target.result; 
-                                else if(id.includes('Client')) logoData.client = ev.target.result;
-                                else if(id.includes('Main')) logoData.lexops = ev.target.result;
-                                applyLogos(); 
-                            };
-                            if(e.target.files[0]) r.readAsDataURL(e.target.files[0]);
-                        });
+                    initializeExcelUpload();
+                    initializeLogoUploads();
+                    initializeWhiteLabelControls();
+                    
+                } catch (error) {
+                    console.error('❌ Application initialization failed:', error);
+                    alert('Erro crítico ao inicializar o sistema. Recarregue a página.');
+                }
+            }
+
+            // ═══════════════════════════════════════════════════════════════════════
+            // EXCEL UPLOAD HANDLER (Defensive Programming)
+            // ═══════════════════════════════════════════════════════════════════════
+            function initializeExcelUpload() {
+                const fileInput = document.getElementById('fileInput');
+                if (!fileInput) return;
+
+                fileInput.addEventListener('change', async (event) => {
+                    const file = event.target?.files?.[0];
+                    if (!file) return;
+
+                    setLoadingState(true);
+
+                    try {
+                        validateFile(file, ['xlsx', 'xls', 'csv'], 50);
+
+                        const arrayBuffer = await readFileAsArrayBuffer(file);
+                        const workbook = XLSX.read(arrayBuffer, { type: 'array' });
+                        
+                        if (!workbook.SheetNames.length) {
+                            throw new Error('A planilha está vazia ou corrompida');
+                        }
+
+                        const firstSheet = workbook.Sheets[workbook.SheetNames[0]];
+                        const rawData = XLSX.utils.sheet_to_json(firstSheet);
+                        
+                        if (!rawData || rawData.length === 0) {
+                            throw new Error('A planilha não contém dados válidos');
+                        }
+
+                        rawHeaders = Object.keys(rawData[0]);
+                        window._tempRaw = rawData;
+                        showMapping();
+
+                    } catch (error) {
+                        console.error('❌ Excel upload failed:', error);
+                        alert(`Erro ao processar arquivo:\n${error.message}`);
+                    } finally {
+                        setLoadingState(false);
+                        fileInput.value = ''; // Limpa input para permitir re-upload do mesmo arquivo
                     }
                 });
+            }
 
-                console.log('Event listeners registered');
+            // Helper: Promisify FileReader
+            const readFileAsArrayBuffer = (file) => {
+                return new Promise((resolve, reject) => {
+                    const reader = new FileReader();
+                    reader.onload = (e) => resolve(e.target.result);
+                    reader.onerror = () => reject(new Error('Falha ao ler arquivo'));
+                    reader.readAsArrayBuffer(file);
+                });
+            };
+
+            // ═══════════════════════════════════════════════════════════════════════
+            // LOGO UPLOADS HANDLER (Memory-Safe)
+            // ═══════════════════════════════════════════════════════════════════════
+            function initializeLogoUploads() {
+                const logoConfigs = [
+                    { id: 'logoOffice', key: 'office' },
+                    { id: 'logoClient', key: 'client' },
+                    { id: 'lexopsMainLogo', key: 'lexops' }
+                ];
+
+                logoConfigs.forEach(({ id, key }) => {
+                    const input = document.getElementById(id);
+                    if (!input) return;
+
+                    input.addEventListener('change', async (event) => {
+                        const file = event.target?.files?.[0];
+                        if (!file) return;
+
+                        try {
+                            validateFile(file, ['jpg', 'jpeg', 'png', 'svg', 'webp'], 5);
+
+                            const dataURL = await readFileAsDataURL(file);
+                            logoData[key] = dataURL;
+                            applyLogos();
+
+                        } catch (error) {
+                            console.error(`❌ Logo upload failed (${key}):`, error);
+                            alert(`Erro ao carregar logo:\n${error.message}`);
+                        } finally {
+                            input.value = ''; // Limpa input
+                        }
+                    });
+                });
+            }
+
+            // Helper: Promisify FileReader (DataURL)
+            const readFileAsDataURL = (file) => {
+                return new Promise((resolve, reject) => {
+                    const reader = new FileReader();
+                    reader.onload = (e) => resolve(e.target.result);
+                    reader.onerror = () => reject(new Error('Falha ao ler imagem'));
+                    reader.readAsDataURL(file);
+                });
+            };
+
+            // ═══════════════════════════════════════════════════════════════════════
+            // WHITE LABEL CONTROLS (Real-Time Rendering with RAF)
+            // ═══════════════════════════════════════════════════════════════════════
+            function initializeWhiteLabelControls() {
+                // Color inputs (instant feedback via requestAnimationFrame)
+                const colorInputs = [
+                    { id: 'accentColorInput', handler: updateAccentColor },
+                    { id: 'headerBgInput', handler: updateHeaderBg },
+                    { id: 'headerTextInput', handler: updateHeaderText }
+                ];
+
+                colorInputs.forEach(({ id, handler }) => {
+                    const input = document.getElementById(id);
+                    if (!input) return;
+                    input.addEventListener('input', (e) => handler(e.target.value));
+                });
+
+                // Text inputs (debounced para reduzir carga)
+                const textInputs = [
+                    { id: 'panelTitleInput', handler: updatePanelTitle },
+                    { id: 'footerTextInput', handler: updateFooterText }
+                ];
+
+                textInputs.forEach(({ id, handler }) => {
+                    const input = document.getElementById(id);
+                    if (!input) return;
+                    input.addEventListener('input', debounce((e) => handler(e.target.value), 100));
+                });
+
+                // Range input (opacity slider)
+                const opacityInput = document.getElementById('headerOpacityInput');
+                if (opacityInput) {
+                    opacityInput.addEventListener('input', (e) => updateHeaderOpacity(e.target.value));
+                }
             }
         })();
 
@@ -962,23 +1111,24 @@
             
             if(!img) return;
             
-            // Always show the logo from the file system
-            img.style.display = 'block';
-            img.src = 'C:\\Users\\User\\Desktop\\lexops-insight\\public\\assets\\img\\logo-lexops.png';
-            
-            if(fallback) fallback.style.display = 'none';
-            
-            // If upload provides custom logo, use it
-            if(logoData && logoData.lexops) {
-                img.src = logoData.lexops;
-                img.onload = function() { 
-                    this.style.display = 'block';
-                    if(fallback) fallback.style.display = 'none';
-                };
-                img.onerror = function() {
-                    this.src = 'C:\\Users\\User\\Desktop\\lexops-insight\\public\\assets\\img\\logo-lexops.png';
-                };
-            }
+            requestAnimationFrame(() => {
+                img.style.display = 'block';
+                img.src = 'assets/img/logo-lexops.png';
+                
+                if(fallback) fallback.style.display = 'none';
+                
+                // If custom logo uploaded, use it
+                if(logoData?.lexops) {
+                    img.src = logoData.lexops;
+                    img.onload = function() { 
+                        this.style.display = 'block';
+                        if(fallback) fallback.style.display = 'none';
+                    };
+                    img.onerror = function() {
+                        this.src = 'assets/img/logo-lexops.png';
+                    };
+                }
+            });
         }
 
         ['logoOffice', 'logoClient', 'lexopsMainLogo'].forEach(id => {
@@ -997,36 +1147,59 @@
             }
         });
 
+        // ═══════════════════════════════════════════════════════════════════════
+        // LOGO APPLICATION (Memory-Safe with RAF)
+        // ═══════════════════════════════════════════════════════════════════════
         function applyLogos() {
+            // Office logo
             if(logoData.office) { 
                 const img = document.getElementById('imgOffice'); 
-                if(img) { 
-                    img.src = logoData.office; 
-                    img.classList.remove('hidden'); 
-                    document.getElementById('phOffice').classList.add('hidden'); 
+                const ph = document.getElementById('phOffice');
+                if(img) {
+                    requestAnimationFrame(() => {
+                        img.src = logoData.office; 
+                        img.style.display = 'block';
+                        img.classList.remove('hidden'); 
+                        if(ph) ph.classList.add('hidden'); 
+                    });
                 }
             }
+            
+            // Client logo
             if(logoData.client) { 
                 const img = document.getElementById('imgClient'); 
-                if(img) { 
-                    img.src = logoData.client; 
-                    img.classList.remove('hidden'); 
-                    document.getElementById('phClient').classList.add('hidden'); 
+                const ph = document.getElementById('phClient');
+                if(img) {
+                    requestAnimationFrame(() => {
+                        img.src = logoData.client; 
+                        img.style.display = 'block';
+                        img.classList.remove('hidden'); 
+                        if(ph) ph.classList.add('hidden'); 
+                    });
                 }
             }
+            
+            // LexOps logo (admin + header)
             if(logoData.lexops) {
                 const imgAdmin = document.getElementById('lexopsLogoImg');
                 const imgHeader = document.getElementById('lexopsHeaderLogo');
-                if(imgAdmin) {
-                    imgAdmin.src = logoData.lexops;
-                    imgAdmin.classList.remove('hidden');
-                    document.getElementById('lexopsLogoFallback').classList.add('hidden');
-                }
-                if(imgHeader) {
-                    imgHeader.src = logoData.lexops;
-                    imgHeader.classList.remove('hidden');
-                    document.getElementById('lexopsHeaderFallback').classList.add('hidden');
-                }
+                const fallbackAdmin = document.getElementById('lexopsLogoFallback');
+                const fallbackHeader = document.getElementById('lexopsHeaderFallback');
+                
+                requestAnimationFrame(() => {
+                    if(imgAdmin) {
+                        imgAdmin.src = logoData.lexops;
+                        imgAdmin.style.display = 'block';
+                        imgAdmin.classList.remove('hidden');
+                        if(fallbackAdmin) fallbackAdmin.classList.add('hidden');
+                    }
+                    if(imgHeader) {
+                        imgHeader.src = logoData.lexops;
+                        imgHeader.style.display = 'block';
+                        imgHeader.classList.remove('hidden');
+                        if(fallbackHeader) fallbackHeader.classList.add('hidden');
+                    }
+                });
             }
         }
 
@@ -1423,47 +1596,54 @@
         }
 
         // Funções de White Label - Identidade da Marca
+        // ═══════════════════════════════════════════════════════════════════════
+        // WHITE LABEL UPDATE FUNCTIONS (Real-Time with RAF)
+        // ═══════════════════════════════════════════════════════════════════════
         function updateAccentColor(color) {
-            document.documentElement.style.setProperty('--primary-accent', color);
+            updateCSSVar('--primary-accent', color);
         }
 
         function updatePanelTitle(text) {
-            const h1 = document.querySelector('header h1') || document.querySelector('.header-center h1');
-            if(h1) h1.textContent = text;
+            requestAnimationFrame(() => {
+                const h1 = document.querySelector('header h1') || document.querySelector('.header-center h1');
+                if(h1) h1.textContent = text;
+            });
         }
 
         function updateFooterText(text) {
-            const footer = document.querySelector('footer') || document.querySelector('footer p');
-            if(footer) footer.textContent = text;
-            else {
-                // Se não existir footer, criar/atualizar no powered by
-                const powered = document.querySelector('.header-center p');
-                if(powered) powered.textContent = text;
-            }
+            requestAnimationFrame(() => {
+                const footer = document.querySelector('footer') || document.querySelector('footer p');
+                if(footer) footer.textContent = text;
+                else {
+                    const powered = document.querySelector('.header-center p');
+                    if(powered) powered.textContent = text;
+                }
+            });
         }
 
-        // Funções de White Label - Estilo do Cabeçalho
         function updateHeaderBg(color) {
-            // Converter hex para RGB
             const rgb = hexToRgb(color);
             if(rgb) {
-                document.documentElement.style.setProperty('--header-bg-rgb', `${rgb.r},${rgb.g},${rgb.b}`);
+                updateCSSVar('--header-bg-rgb', `${rgb.r},${rgb.g},${rgb.b}`);
             }
         }
 
         function updateHeaderText(color) {
-            document.documentElement.style.setProperty('--header-text', color);
+            updateCSSVar('--header-text', color);
         }
 
         function updateHeaderOpacity(value) {
             const numValue = parseFloat(value);
-            document.documentElement.style.setProperty('--header-opacity', numValue);
-            const percentage = Math.round(numValue * 100);
-            const opacityValueEl = document.getElementById('opacityValue');
-            if(opacityValueEl) opacityValueEl.textContent = percentage + '%';
+            updateCSSVar('--header-opacity', numValue);
+            
+            requestAnimationFrame(() => {
+                const percentage = Math.round(numValue * 100);
+                const opacityValueEl = document.getElementById('opacityValue');
+                if(opacityValueEl) opacityValueEl.textContent = percentage + '%';
+            });
         }
 
-        // Utilitário: Converter HEX para RGB
+        // Utility: Convert HEX to RGB
         function hexToRgb(hex) {
             const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
             return result ? {
@@ -1471,7 +1651,6 @@
                 g: parseInt(result[2], 16),
                 b: parseInt(result[3], 16)
             } : null;
-        }
         }
 
         function analisarCurvaABC(dados) {
