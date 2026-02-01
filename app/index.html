@@ -963,15 +963,10 @@
             // ═══════════════════════════════════════════════════════════════════════
             function bootAdminMode() {
                 try {
-                    if (!window.XLSX) {
-                        throw new Error('SheetJS not loaded');
-                    }
-
                     initializeExcelUpload();
                     initializeLogoUploads();
                     initializeWhiteLabelControls();
                     applyVisualEnhancements();
-
                 } catch (error) {
                     console.error('Admin mode boot failed:', error);
                     alert('Erro ao inicializar o sistema.');
@@ -992,6 +987,9 @@
                     setLoadingState(true);
 
                     try {
+                        if (!window.XLSX) {
+                            throw new Error('SheetJS não carregado. Verifique a conexão e recarregue a página.');
+                        }
                         // Validation
                         if (!file.name.match(/\.(xlsx?|csv)$/i)) {
                             throw new Error('Formato inválido. Use XLSX, XLS ou CSV.');
@@ -1093,9 +1091,9 @@
             function initializeWhiteLabelControls() {
                 // Color inputs (instant feedback via RAF)
                 const colorControls = [
-                    { id: 'accentColorInput', varName: '--primary-accent' },
+                    { id: 'accentColorInput', handler: updateAccentColor },
                     { id: 'headerBgInput', handler: updateHeaderBg },
-                    { id: 'headerTextInput', varName: '--header-text' }
+                    { id: 'headerTextInput', handler: updateHeaderText }
                 ];
 
                 colorControls.forEach(({ id, varName, handler }) => {
@@ -1294,43 +1292,6 @@
 
             setTimeout(() => URL.revokeObjectURL(a.href), 100);
         }
-                    try {
-                        const rawJson = JSON.parse(dataIsland.textContent);
-                        window.dStore = JSON.parse(b64DecodeUnicode(rawJson.dStore));
-                        window.customCharts = JSON.parse(b64DecodeUnicode(rawJson.customCharts));
-                        window.themeConfig = JSON.parse(b64DecodeUnicode(rawJson.themeConfig));
-                        window.colMapping = JSON.parse(b64DecodeUnicode(rawJson.colMapping));
-                        window.logoData = JSON.parse(b64DecodeUnicode(rawJson.logoData));
-                        
-                        if(rawJson.layoutTheme) window.layoutTheme = rawJson.layoutTheme;
-                        if(rawJson.numericColumns) window.numericColumns = rawJson.numericColumns;
-                        if(rawJson.mappedValueColumn) window.mappedValueColumn = rawJson.mappedValueColumn;
-                        
-                        document.body.classList.add('client-mode');
-                        const adminPanel = document.getElementById('adminPanel');
-                        if(adminPanel) adminPanel.remove();
-                        
-                        document.getElementById('dataTable').innerHTML = '';
-                        document.getElementById('chartsGrid').innerHTML = '';
-                        
-                        applyTheme(); 
-                        applyLayoutTheme();
-                        applyLogos();
-                        applyLexOpsLogo();
-                        
-                        document.getElementById('emptyState').classList.add('hidden');
-                        document.getElementById('dashContent').classList.remove('hidden');
-                        
-                        populateChartBuilder();
-                        initFiltersUI(); 
-                        renderAll(); 
-                    } catch (err) {
-                        alert("Erro crítico nos dados.");
-                        console.error(err);
-                    }
-                }
-            }, 300);
-        };
 
         function applyLexOpsLogo() {
             const img = document.getElementById('lexopsLogoImg');
@@ -1357,22 +1318,6 @@
                 }
             });
         }
-
-        ['logoOffice', 'logoClient', 'lexopsMainLogo'].forEach(id => {
-            const el = document.getElementById(id);
-            if(el) {
-                el.addEventListener('change', e => {
-                    const r = new FileReader();
-                    r.onload = ev => { 
-                        if(id.includes('Office')) logoData.office = ev.target.result; 
-                        else if(id.includes('Client')) logoData.client = ev.target.result;
-                        else if(id.includes('Main')) logoData.lexops = ev.target.result;
-                        applyLogos(); 
-                    };
-                    if(e.target.files[0]) r.readAsDataURL(e.target.files[0]);
-                });
-            }
-        });
 
         // ═══════════════════════════════════════════════════════════════════════
         // LOGO APPLICATION (Memory-Safe with RAF)
@@ -1828,6 +1773,23 @@
         // ═══════════════════════════════════════════════════════════════════════
         function updateAccentColor(color) {
             updateCSSVar('--primary-accent', color);
+            document.documentElement.style.setProperty('--brand-500', color);
+            try {
+                document.documentElement.style.setProperty('--brand-600', chroma(color).darken().hex());
+            } catch (e) {
+                document.documentElement.style.setProperty('--brand-600', color);
+            }
+            if (window.themeConfig) {
+                themeConfig.paletteName = 'custom';
+                themeConfig.brand = color;
+                try {
+                    themeConfig.palette = chroma.scale([color, '#cbd5e1']).colors(5);
+                } catch (e) {
+                    themeConfig.palette = [color];
+                }
+                applyTheme();
+                renderAll();
+            }
         }
 
         function updatePanelTitle(text) {
