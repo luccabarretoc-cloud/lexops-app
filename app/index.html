@@ -28,8 +28,8 @@
         }
     </script>
 
-    <style>
-        :root { 
+        <style>
+                :root { 
             --brand-500: #4f46e5; 
             --brand-600: #4338ca;
             --layout-bg: #e2e8f0;
@@ -41,41 +41,12 @@
             --layout-sidebar-text: #f8fafc;
             --layout-sidebar-border: #1e293b;
         }
+                body { background: var(--layout-bg); color: var(--layout-text); overflow: hidden; }
+                #protectedContent { display: none; width: 100%; height: 100%; }
+                #accessError { display: none; min-height: 100vh; align-items: center; justify-content: center; background: var(--layout-bg); color: var(--layout-text); }
+                #accessError.active { display: flex; }
+                #accessError .message { background: var(--layout-card); border: 1px solid var(--layout-border); padding: 1.5rem 2rem; border-radius: 0.75rem; box-shadow: 0 10px 30px -10px rgba(0,0,0,0.2); font-weight: 700; }
 
-        <script src="js/app.js"></script>
-        
-        body { background: var(--layout-bg); color: var(--layout-text); overflow: hidden; }
-
-        <style>html { display: none; }</style>
-
-        <script>
-  (async () => {
-    const params = new URLSearchParams(window.location.search);
-    const token = params.get("token");
-
-    if (!token) {
-      document.body.innerHTML = "<h2>Acesso restrito</h2>";
-      return;
-    }
-
-    try {
-      const res = await fetch(`/.netlify/functions/validate-token?token=${token}`);
-      const result = await res.json();
-
-      if (!result.valid) {
-        document.body.innerHTML = "<h2>Acesso expirado ou inválido</h2>";
-        return;
-      }
-
-      // Token válido → app continua carregando
-      document.documentElement.style.display = "block";
-
-    } catch (e) {
-      document.body.innerHTML = "<h2>Erro de validação</h2>";
-    }
-  })();
-</script>
-        
         .glass { 
             background: #FFFFFF; 
             border: 1px solid var(--layout-border); 
@@ -308,8 +279,69 @@
             .brand-header { border-bottom: 2px solid #000; margin-bottom: 20px; height: auto; padding: 20px 0; }
         }
     </style>
+
+    <script>
+        window.__ACCESS_GRANTED__ = false;
+
+        async function validateAccess() {
+            const params = new URLSearchParams(window.location.search);
+            const token = params.get('token');
+            const errorEl = document.getElementById('accessError');
+            const messageEl = errorEl ? errorEl.querySelector('.message') : null;
+            const protectedEl = document.getElementById('protectedContent');
+
+            const showError = (msg) => {
+                if (messageEl) messageEl.textContent = msg;
+                if (errorEl) errorEl.classList.add('active');
+                if (protectedEl) protectedEl.style.display = 'none';
+            };
+
+            if (!token) {
+                showError('Acesso Negado');
+                return;
+            }
+
+            try {
+                const res = await fetch(`/.netlify/functions/validate-token?token=${encodeURIComponent(token)}`);
+
+                if (res.status === 401 || res.status === 403) {
+                    showError('Acesso Negado');
+                    return;
+                }
+
+                if (!res.ok) {
+                    showError('Erro de validação');
+                    return;
+                }
+
+                let payload = null;
+                try { payload = await res.json(); } catch (e) { payload = null; }
+
+                if (payload && payload.valid === false) {
+                    showError('Acesso Negado');
+                    return;
+                }
+
+                if (errorEl) errorEl.classList.remove('active');
+                if (protectedEl) protectedEl.style.display = 'flex';
+                window.__ACCESS_GRANTED__ = true;
+            } catch (e) {
+                showError('Erro de validação');
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', validateAccess);
+    </script>
+
+    <script src="js/app.js" defer></script>
 </head>
-<body class="flex h-screen font-sans text-sm">
+<body class="font-sans text-sm">
+
+    <div id="accessError">
+        <div class="message">Acesso Negado</div>
+    </div>
+
+    <div id="protectedContent" class="flex h-screen">
 
     <aside id="adminPanel" class="admin-panel w-80 glass-dark flex flex-col shrink-0 transition-all" style="z-index: 1000; position: relative;">
         <div class="lexops-logo-admin flex items-center justify-center border-b" style="border-color: var(--layout-sidebar-border);">
@@ -1694,6 +1726,8 @@
             a.click();
         }
     </script>
+
+    </div>
 </body>
 </html>
 
