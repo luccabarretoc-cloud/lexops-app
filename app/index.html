@@ -32,6 +32,7 @@
                 :root { 
             --brand-500: #4f46e5; 
             --brand-600: #4338ca;
+            --primary-accent: #4f46e5;
             --layout-bg: #e2e8f0;
             --layout-card: #ffffff;
             --layout-text: #111827;
@@ -40,18 +41,34 @@
             --layout-sidebar: #0f172a;
             --layout-sidebar-text: #f8fafc;
             --layout-sidebar-border: #1e293b;
+            --header-bg: #ffffff;
+            --header-text: #111827;
+            --header-opacity: 1;
         }
                 html { height: 100%; }
-                body { background: var(--layout-bg); color: var(--layout-text); overflow: hidden; height: 100vh; }
+                body { 
+                    background: var(--layout-bg); 
+                    color: var(--layout-text); 
+                    overflow: hidden; 
+                    height: 100vh;
+                    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+                    -webkit-font-smoothing: antialiased;
+                    -moz-osx-font-smoothing: grayscale;
+                }
                 #protectedContent { display: none; width: 100%; height: 100%; flex: 1; overflow: hidden; }
                 #accessError { display: none; min-height: 100vh; align-items: center; justify-content: center; background: var(--layout-bg); color: var(--layout-text); }
                 #accessError.active { display: flex; }
-                #accessError .message { background: var(--layout-card); border: 1px solid var(--layout-border); padding: 1.5rem 2rem; border-radius: 0.75rem; box-shadow: 0 10px 30px -10px rgba(0,0,0,0.2); font-weight: 700; }
+                #accessError .message { background: var(--layout-card); border: 1px solid var(--layout-border); padding: 1.5rem 2rem; border-radius: 0.75rem; box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05); font-weight: 700; }
 
         .glass { 
             background: #FFFFFF; 
-            border: 1px solid var(--layout-border); 
-            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1); 
+            border: 1px solid rgba(0, 0, 0, 0.03); 
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
+            transition: all 0.3s ease;
+        }
+        .glass:hover {
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.08);
+            transform: translateY(-2px);
         }
         .glass-dark { 
             background: var(--layout-sidebar); 
@@ -69,8 +86,17 @@
             overflow-y: auto !important;
             overflow-x: hidden !important;
         }
-        .card { transition: all 0.2s; border-radius: 12px; }
-        .card:hover { transform: translateY(-2px); box-shadow: 0 4px 12px 0 rgba(0, 0, 0, 0.08); }
+        .card { 
+            transition: all 0.3s ease; 
+            border-radius: 12px;
+            border: 1px solid rgba(0, 0, 0, 0.03);
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
+        }
+        .card:hover { 
+            transform: translateY(-4px); 
+            box-shadow: 0 12px 40px rgba(0, 0, 0, 0.08);
+            border-color: rgba(0, 0, 0, 0.06);
+        }
         .card-chart { resize: both; overflow: hidden; min-width: 300px; min-height: 350px; max-width: 100%; }
         .resize-handle { position: absolute; bottom: 4px; right: 4px; width: 14px; height: 14px; opacity: 0.25; pointer-events: none; }
         .resize-handle::before { content: '⤡'; font-size: 14px; color: currentColor; }
@@ -82,20 +108,23 @@
         
         .brand-header {
             height: 9rem; 
-            background: #FFFFFF;
-            box-shadow: 0 10px 30px -10px rgba(0,0,0,0.1);
+            background: rgba(var(--header-bg-rgb, 255,255,255), var(--header-opacity, 1));
+            border-bottom: 1px solid #e0e0e0;
             display: flex;
             align-items: center;
             padding: 0 1.5rem;
             position: relative;
             z-index: 40;
-            gap: 0.5rem;
+            gap: 2rem;
             justify-content: space-between;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
+            color: var(--header-text, #111827);
+            transition: all 0.3s ease;
         }
 
-        .header-section { flex: 1; display: flex; align-items: center; height: 100%; }
-        .header-left { justify-content: flex-end; gap: 0; padding-right: 1rem; }
-        .header-right { justify-content: flex-start; gap: 0; padding-left: 1rem; }
+        .header-section { flex: 1; display: flex; align-items: center; height: 100%; gap: 0; }
+        .header-left { justify-content: flex-end; gap: 0; padding-right: 1rem; margin-right: 1rem; }
+        .header-right { justify-content: flex-start; gap: 0; padding-left: 1rem; margin-left: 1rem; }
         
         .header-center { 
             flex: 0 0 380px; 
@@ -122,34 +151,37 @@
         }
 
         .logo-upload { 
-            max-height: 60px; 
+            max-height: 50px; 
             width: auto; 
             max-width: 340px; 
             object-fit: contain; 
-            transition: transform 0.3s; 
+            transition: transform 0.3s ease;
             background: transparent !important;
             border: none !important;
             box-shadow: none !important;
+            padding: 0 !important;
+            margin: 0 !important;
         }
-        .logo-upload:hover { transform: scale(1.02); }
+        .logo-upload:hover { transform: scale(1.05); }
 
         .logo-placeholder { 
             opacity: 1 !important;
-            background-color: #ffffff;
-            border: 1px solid #94a3b8; 
-            border-radius: 8px; 
-            padding: 1.2rem 2.5rem; 
+            background-color: transparent;
+            border: 1px solid #e0e0e0; 
+            border-radius: 4px; 
+            padding: 0.8rem 1.5rem; 
             text-align: center; 
-            color: #0f172a; 
-            font-weight: 700; 
-            font-size: 0.75rem; 
-            box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+            color: #999; 
+            font-weight: 600; 
+            font-size: 0.65rem; 
+            box-shadow: none;
             cursor: pointer;
             transition: all 0.2s ease;
         }
         .logo-placeholder:hover {
-            background: #F5F3FF;
-            border-color: var(--brand-500);
+            background: #f9f9f9;
+            border-color: #d0d0d0;
+            color: #666;
         }
 
         .header-center h1 { 
@@ -276,6 +308,11 @@
         body.client-mode .logo-placeholder { display: none !important; }
         body.client-mode .client-controls { display: flex !important; }
         
+        /* Blindagem: Ocultar controles administrativos */
+        .no-export { display: none !important; }
+        .hide-on-print { display: none !important; }
+        .d-print-none { display: none !important; }
+        
         #pageLoader { position: fixed; inset: 0; background: var(--layout-bg); z-index: 9999; display: none; justify-content: center; align-items: center; transition: opacity 0.5s; pointer-events: none; }
         .spinner { width: 40px; height: 40px; border: 4px solid #e2e8f0; border-top-color: var(--brand-500); border-radius: 50%; animation: spin 1s linear infinite; }
         @keyframes spin { to { transform: rotate(360deg); } }
@@ -291,8 +328,9 @@
         }
         
         @media print {
-            .no-print, .admin-panel, .client-controls, #emptyState, .no-export { display: none !important; }
+            .no-print, .admin-panel, .client-controls, #emptyState, .no-export, #adminPanel { display: none !important; }
             .hide-on-print, .d-print-none { display: none !important; }
+            aside, [class*="admin"] { display: none !important; }
             main { margin: 0 !important; width: 100% !important; overflow: visible !important; }
             .glass { box-shadow: none !important; border: 1px solid #cbd5e1 !important; break-inside: avoid; }
             #dashboardBody { padding: 0 !important; }
@@ -305,6 +343,13 @@
         window.__ACCESS_GRANTED__ = false;
 
         async function validateAccess() {
+            // Modo Offline: se a variável estiver setada, pula validação
+            if (window.LEXOPS_OFFLINE_MODE === true) {
+                console.log('Modo Offline: Validação de token ignorada.');
+                document.getElementById('protectedContent').style.display = 'flex';
+                return;
+            }
+
             const params = new URLSearchParams(window.location.search);
             const token = params.get('token');
             const errorEl = document.getElementById('accessError');
@@ -470,6 +515,48 @@
                             <option value="lavender">Soft Lavender</option>
                             <option value="ink">Corporate Ink</option>
                         </select>
+                    </div>
+                </div>
+
+                <div class="p-3 rounded-lg space-y-3 border admin-button no-export hide-on-print d-print-none" style="border-color: rgba(255,255,255,0.1)">
+                    <h4 class="text-[9px] font-bold uppercase tracking-wide mb-2 admin-section-title"><i class="fas fa-crown mr-1.5"></i> Identidade da Marca (White Label)</h4>
+                    <div class="space-y-2">
+                        <div class="space-y-1">
+                            <label class="text-[10px] block font-medium admin-section-title">Cor de Destaque</label>
+                            <div class="flex gap-2 items-center">
+                                <input type="color" id="accentColorInput" value="#4f46e5" onchange="updateAccentColor(this.value)" class="h-8 w-12 rounded cursor-pointer border border-slate-300">
+                                <span class="text-[9px] opacity-60 admin-section-title flex-1">Usado em botões e destaques</span>
+                            </div>
+                        </div>
+                        <div class="space-y-1">
+                            <label class="text-[10px] block font-medium admin-section-title">Título do Painel</label>
+                            <input type="text" id="panelTitleInput" value="Análise Jurídica Corporativa" onchange="updatePanelTitle(this.value)" class="w-full border text-xs rounded p-2 outline-none admin-select" placeholder="Ex: Painel do Cliente X">
+                        </div>
+                        <div class="space-y-1">
+                            <label class="text-[10px] block font-medium admin-section-title">Texto do Rodapé</label>
+                            <input type="text" id="footerTextInput" value="powered by LexOpsInsight" onchange="updateFooterText(this.value)" class="w-full border text-xs rounded p-2 outline-none admin-select" placeholder="Ex: Desenvolvido por [Seu Escritório]">
+                        </div>
+                    </div>
+                </div>
+
+                <div class="p-3 rounded-lg space-y-3 border admin-button no-export hide-on-print d-print-none" style="border-color: rgba(255,255,255,0.1)">
+                    <h4 class="text-[9px] font-bold uppercase tracking-wide mb-2 admin-section-title"><i class="fas fa-heading mr-1.5"></i> Estilo do Cabeçalho</h4>
+                    <div class="space-y-2">
+                        <div class="space-y-1">
+                            <label class="text-[10px] block font-medium admin-section-title">Fundo do Cabeçalho</label>
+                            <input type="color" id="headerBgInput" value="#ffffff" onchange="updateHeaderBg(this.value)" class="w-full h-8 rounded cursor-pointer border border-slate-300">
+                        </div>
+                        <div class="space-y-1">
+                            <label class="text-[10px] block font-medium admin-section-title">Cor do Texto</label>
+                            <input type="color" id="headerTextInput" value="#111827" onchange="updateHeaderText(this.value)" class="w-full h-8 rounded cursor-pointer border border-slate-300">
+                        </div>
+                        <div class="space-y-1">
+                            <label class="text-[10px] block font-medium admin-section-title">Opacidade do Fundo</label>
+                            <div class="flex gap-2 items-center">
+                                <input type="range" id="headerOpacityInput" min="0" max="1" step="0.1" value="1" onchange="updateHeaderOpacity(this.value)" class="flex-1 cursor-pointer">
+                                <span class="text-[9px] opacity-60 admin-section-title w-8 text-right" id="opacityValue">100%</span>
+                            </div>
+                        </div>
                     </div>
                 </div>
                 
@@ -1324,9 +1411,72 @@
             if(paletteSelect) paletteSelect.value = 'indigo';
             const layoutSelect = document.getElementById('layoutThemeSelect');
             if(layoutSelect) layoutSelect.value = 'minimal';
+            // Reset White Label
+            document.documentElement.style.setProperty('--primary-accent', '#4f46e5');
+            document.documentElement.style.setProperty('--header-bg-rgb', '255,255,255');
+            document.documentElement.style.setProperty('--header-text', '#111827');
+            document.documentElement.style.setProperty('--header-opacity', '1');
+            if(document.getElementById('accentColorInput')) document.getElementById('accentColorInput').value = '#4f46e5';
+            if(document.getElementById('panelTitleInput')) document.getElementById('panelTitleInput').value = 'Análise Jurídica Corporativa';
+            if(document.getElementById('footerTextInput')) document.getElementById('footerTextInput').value = 'powered by LexOpsInsight';
+            if(document.getElementById('headerBgInput')) document.getElementById('headerBgInput').value = '#ffffff';
+            if(document.getElementById('headerTextInput')) document.getElementById('headerTextInput').value = '#111827';
+            if(document.getElementById('headerOpacityInput')) document.getElementById('headerOpacityInput').value = '1';
             applyTheme();
             applyLayoutTheme();
             renderAll();
+        }
+
+        // Funções de White Label - Identidade da Marca
+        function updateAccentColor(color) {
+            document.documentElement.style.setProperty('--primary-accent', color);
+        }
+
+        function updatePanelTitle(text) {
+            const h1 = document.querySelector('header h1') || document.querySelector('.header-center h1');
+            if(h1) h1.textContent = text;
+        }
+
+        function updateFooterText(text) {
+            const footer = document.querySelector('footer') || document.querySelector('footer p');
+            if(footer) footer.textContent = text;
+            else {
+                // Se não existir footer, criar/atualizar no powered by
+                const powered = document.querySelector('.header-center p');
+                if(powered) powered.textContent = text;
+            }
+        }
+
+        // Funções de White Label - Estilo do Cabeçalho
+        function updateHeaderBg(color) {
+            // Converter hex para RGB
+            const rgb = hexToRgb(color);
+            if(rgb) {
+                document.documentElement.style.setProperty('--header-bg-rgb', `${rgb.r},${rgb.g},${rgb.b}`);
+            }
+        }
+
+        function updateHeaderText(color) {
+            document.documentElement.style.setProperty('--header-text', color);
+        }
+
+        function updateHeaderOpacity(value) {
+            const numValue = parseFloat(value);
+            document.documentElement.style.setProperty('--header-opacity', numValue);
+            const percentage = Math.round(numValue * 100);
+            const opacityValueEl = document.getElementById('opacityValue');
+            if(opacityValueEl) opacityValueEl.textContent = percentage + '%';
+        }
+
+        // Utilitário: Converter HEX para RGB
+        function hexToRgb(hex) {
+            const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
+            return result ? {
+                r: parseInt(result[1], 16),
+                g: parseInt(result[2], 16),
+                b: parseInt(result[3], 16)
+            } : null;
+        }
         }
 
         function analisarCurvaABC(dados) {
@@ -1771,18 +1921,41 @@
             };
 
             const clone = document.documentElement.cloneNode(true);
+            
+            // Remover painel administrativo (segurança máxima)
             const adminPanel = clone.querySelector('#adminPanel');
             if(adminPanel) adminPanel.remove();
             
-            // Remove materiais de apoio (no-export)
+            // Remover cliente-controls
+            const clientControls = clone.querySelector('#clientControls');
+            if(clientControls) clientControls.remove();
+            
+            // Remover qualquer elemento com classe no-export
             const noExportElements = clone.querySelectorAll('.no-export');
             noExportElements.forEach(el => el.remove());
             
             const loader = clone.querySelector('#pageLoader');
             if(loader) loader.style.opacity = '1';
 
+            // Injetar CSS customizado com variáveis White Label
             const style = clone.querySelector('style');
-            if(style) style.textContent += "\nbody.client-mode .admin-panel { display: none !important; } body.client-mode .client-controls { display: flex !important; }";
+            if(style) {
+                const cssVars = `
+                    :root {
+                        --primary-accent: ${getComputedStyle(document.documentElement).getPropertyValue('--primary-accent').trim() || '#4f46e5'};
+                        --header-bg-rgb: ${getComputedStyle(document.documentElement).getPropertyValue('--header-bg-rgb').trim() || '255,255,255'};
+                        --header-text: ${getComputedStyle(document.documentElement).getPropertyValue('--header-text').trim() || '#111827'};
+                        --header-opacity: ${getComputedStyle(document.documentElement).getPropertyValue('--header-opacity').trim() || '1'};
+                    }
+                `;
+                style.textContent = cssVars + style.textContent + "\nbody.client-mode .admin-panel { display: none !important; } body.client-mode .client-controls { display: flex !important; }";
+            }
+
+            // Injetar script de Modo Offline logo no início do head
+            const head = clone.querySelector('head');
+            const offlineScript = document.createElement('script');
+            offlineScript.textContent = 'window.LEXOPS_OFFLINE_MODE = true;';
+            if(head) head.insertBefore(offlineScript, head.firstChild);
 
             const dataScript = clone.querySelector('#consolidated-data');
             if(dataScript) dataScript.textContent = JSON.stringify(safePayload);
