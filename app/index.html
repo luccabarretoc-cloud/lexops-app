@@ -41,8 +41,9 @@
             --layout-sidebar-text: #f8fafc;
             --layout-sidebar-border: #1e293b;
         }
-                body { background: var(--layout-bg); color: var(--layout-text); overflow: hidden; }
-                #protectedContent { display: none; width: 100%; height: 100%; }
+                html { height: 100%; }
+                body { background: var(--layout-bg); color: var(--layout-text); overflow: hidden; height: 100vh; }
+                #protectedContent { display: none; width: 100%; height: 100%; flex: 1; overflow: hidden; }
                 #accessError { display: none; min-height: 100vh; align-items: center; justify-content: center; background: var(--layout-bg); color: var(--layout-text); }
                 #accessError.active { display: flex; }
                 #accessError .message { background: var(--layout-card); border: 1px solid var(--layout-border); padding: 1.5rem 2rem; border-radius: 0.75rem; box-shadow: 0 10px 30px -10px rgba(0,0,0,0.2); font-weight: 700; }
@@ -59,6 +60,14 @@
         .admin-panel {
             box-shadow: none !important;
             border-radius: 0 !important;
+            overflow: hidden !important;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .admin-panel > .flex-1 {
+            overflow-y: auto !important;
+            overflow-x: hidden !important;
         }
         .card { transition: all 0.2s; border-radius: 12px; }
         .card:hover { transform: translateY(-2px); box-shadow: 0 4px 12px 0 rgba(0, 0, 0, 0.08); }
@@ -113,13 +122,14 @@
         }
 
         .logo-upload { 
-            max-height: 8.5rem; 
+            max-height: 60px; 
             width: auto; 
             max-width: 340px; 
             object-fit: contain; 
-            mix-blend-mode: multiply; 
             transition: transform 0.3s; 
-            filter: drop-shadow(0 2px 4px rgba(0,0,0,0.08));
+            background: transparent !important;
+            border: none !important;
+            box-shadow: none !important;
         }
         .logo-upload:hover { transform: scale(1.02); }
 
@@ -166,7 +176,7 @@
             align-items: center;
             justify-content: center;
             height: 90px;
-            background: #F8FAFC;
+            background: transparent !important;
             margin: 0;
             padding: 0.5rem;
             overflow: hidden;
@@ -270,6 +280,16 @@
         .spinner { width: 40px; height: 40px; border: 4px solid #e2e8f0; border-top-color: var(--brand-500); border-radius: 50%; animation: spin 1s linear infinite; }
         @keyframes spin { to { transform: rotate(360deg); } }
 
+        main {
+            overflow-y: auto !important;
+            overflow-x: hidden !important;
+        }
+        
+        #dashboardBody {
+            overflow-y: auto !important;
+            overflow-x: hidden !important;
+        }
+        
         @media print {
             .no-print, .admin-panel, .client-controls, #emptyState, .no-export { display: none !important; }
             .hide-on-print, .d-print-none { display: none !important; }
@@ -367,8 +387,11 @@
                 <input type="file" id="logoClient" accept="image/*" class="hidden">
             </section>
 
-            <section class="space-y-4 support-materials-section no-export hide-on-print d-print-none">
-                <h3 class="text-[10px] font-bold uppercase tracking-widest border-b pb-2 admin-section-title" style="border-color: var(--layout-sidebar-border)"><i class="fas fa-file-download mr-2"></i> Materiais de Apoio</h3>
+            <details class="support-materials-section no-export hide-on-print d-print-none">
+                <summary class="text-[10px] font-bold uppercase tracking-widest border-b pb-2 admin-section-title cursor-pointer" style="border-color: var(--layout-sidebar-border); list-style: none; padding-bottom: 0.5rem; margin-bottom: 0.5rem;">
+                    <i class="fas fa-folder-open mr-2"></i> 📂 Materiais de Apoio e Downloads
+                </summary>
+                <section class="space-y-4">
                 
                 <div class="space-y-3">
                     <div class="p-3 rounded-lg border admin-button" style="border-color: rgba(255,255,255,0.1)">
@@ -405,6 +428,7 @@
                     </div>
                 </div>
             </section>
+            </details>
 
             <section class="space-y-4">
                 <h3 class="text-[10px] font-bold uppercase tracking-widest border-b pb-2 admin-section-title" style="border-color: var(--layout-sidebar-border)"><i class="fas fa-paint-brush mr-2"></i> Aparência</h3>
@@ -1749,6 +1773,11 @@
             const clone = document.documentElement.cloneNode(true);
             const adminPanel = clone.querySelector('#adminPanel');
             if(adminPanel) adminPanel.remove();
+            
+            // Remove materiais de apoio (no-export)
+            const noExportElements = clone.querySelectorAll('.no-export');
+            noExportElements.forEach(el => el.remove());
+            
             const loader = clone.querySelector('#pageLoader');
             if(loader) loader.style.opacity = '1';
 
