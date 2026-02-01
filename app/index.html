@@ -271,7 +271,8 @@
         @keyframes spin { to { transform: rotate(360deg); } }
 
         @media print {
-            .no-print, .admin-panel, .client-controls, #emptyState { display: none !important; }
+            .no-print, .admin-panel, .client-controls, #emptyState, .no-export { display: none !important; }
+            .hide-on-print, .d-print-none { display: none !important; }
             main { margin: 0 !important; width: 100% !important; overflow: visible !important; }
             .glass { box-shadow: none !important; border: 1px solid #cbd5e1 !important; break-inside: avoid; }
             #dashboardBody { padding: 0 !important; }
@@ -364,6 +365,45 @@
                 </div>
                 <input type="file" id="logoOffice" accept="image/*" class="hidden">
                 <input type="file" id="logoClient" accept="image/*" class="hidden">
+            </section>
+
+            <section class="space-y-4 support-materials-section no-export hide-on-print d-print-none">
+                <h3 class="text-[10px] font-bold uppercase tracking-widest border-b pb-2 admin-section-title" style="border-color: var(--layout-sidebar-border)"><i class="fas fa-file-download mr-2"></i> Materiais de Apoio</h3>
+                
+                <div class="space-y-3">
+                    <div class="p-3 rounded-lg border admin-button" style="border-color: rgba(255,255,255,0.1)">
+                        <h4 class="text-[9px] font-bold uppercase tracking-wide mb-2 admin-section-title"><i class="fas fa-chart-bar mr-1.5"></i> 📊 Modelos de Planilhas</h4>
+                        <div class="space-y-1.5">
+                            <a href="assets/docs/planilha-base-geral.xlsx" download class="block w-full py-2 px-3 rounded text-xs font-medium text-center transition-all border" style="border-color: rgba(255,255,255,0.2); color: rgba(255,255,255,0.8); hover:background-color: rgba(255,255,255,0.1);">
+                                <i class="fas fa-download mr-1"></i> Base Geral
+                            </a>
+                            <a href="assets/docs/planilha-executiva.xlsx" download class="block w-full py-2 px-3 rounded text-xs font-medium text-center transition-all border" style="border-color: rgba(255,255,255,0.2); color: rgba(255,255,255,0.8); hover:background-color: rgba(255,255,255,0.1);">
+                                <i class="fas fa-download mr-1"></i> Executiva
+                            </a>
+                            <a href="assets/docs/planilha-multicliente.xlsx" download class="block w-full py-2 px-3 rounded text-xs font-medium text-center transition-all border" style="border-color: rgba(255,255,255,0.2); color: rgba(255,255,255,0.8); hover:background-color: rgba(255,255,255,0.1);">
+                                <i class="fas fa-download mr-1"></i> Multicliente
+                            </a>
+                            <a href="assets/docs/planilha-trabalhista.xlsx" download class="block w-full py-2 px-3 rounded text-xs font-medium text-center transition-all border" style="border-color: rgba(255,255,255,0.2); color: rgba(255,255,255,0.8); hover:background-color: rgba(255,255,255,0.1);">
+                                <i class="fas fa-download mr-1"></i> Trabalhista
+                            </a>
+                        </div>
+                    </div>
+
+                    <div class="p-3 rounded-lg border admin-button" style="border-color: rgba(255,255,255,0.1)">
+                        <h4 class="text-[9px] font-bold uppercase tracking-wide mb-2 admin-section-title"><i class="fas fa-book mr-1.5"></i> 📘 Documentação</h4>
+                        <div class="space-y-1.5">
+                            <a href="assets/docs/manual-usuario.pdf" download class="block w-full py-2 px-3 rounded text-xs font-medium text-center transition-all border" style="border-color: rgba(255,255,255,0.2); color: rgba(255,255,255,0.8); hover:background-color: rgba(255,255,255,0.1);">
+                                <i class="fas fa-download mr-1"></i> Manual do Usuário
+                            </a>
+                            <a href="assets/docs/termo-uso.pdf" download class="block w-full py-2 px-3 rounded text-xs font-medium text-center transition-all border" style="border-color: rgba(255,255,255,0.2); color: rgba(255,255,255,0.8); hover:background-color: rgba(255,255,255,0.1);">
+                                <i class="fas fa-download mr-1"></i> Termo de Uso
+                            </a>
+                            <a href="assets/docs/termo-aceite.pdf" download class="block w-full py-2 px-3 rounded text-xs font-medium text-center transition-all border" style="border-color: rgba(255,255,255,0.2); color: rgba(255,255,255,0.8); hover:background-color: rgba(255,255,255,0.1);">
+                                <i class="fas fa-download mr-1"></i> Termo de Aceite
+                            </a>
+                        </div>
+                    </div>
+                </div>
             </section>
 
             <section class="space-y-4">
