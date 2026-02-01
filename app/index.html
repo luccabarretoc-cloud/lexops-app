@@ -308,11 +308,6 @@
         body.client-mode .logo-placeholder { display: none !important; }
         body.client-mode .client-controls { display: flex !important; }
         
-        /* Blindagem: Ocultar controles administrativos */
-        .no-export { display: none !important; }
-        .hide-on-print { display: none !important; }
-        .d-print-none { display: none !important; }
-        
         #pageLoader { position: fixed; inset: 0; background: var(--layout-bg); z-index: 9999; display: none; justify-content: center; align-items: center; transition: opacity 0.5s; pointer-events: none; }
         .spinner { width: 40px; height: 40px; border: 4px solid #e2e8f0; border-top-color: var(--brand-500); border-radius: 50%; animation: spin 1s linear infinite; }
         @keyframes spin { to { transform: rotate(360deg); } }
@@ -432,7 +427,7 @@
                 <input type="file" id="logoClient" accept="image/*" class="hidden">
             </section>
 
-            <details class="support-materials-section no-export hide-on-print d-print-none">
+            <details class="support-materials-section no-export hide-on-print d-print-none" open>
                 <summary class="text-[10px] font-bold uppercase tracking-widest border-b pb-2 admin-section-title cursor-pointer" style="border-color: var(--layout-sidebar-border); list-style: none; padding-bottom: 0.5rem; margin-bottom: 0.5rem;">
                     <i class="fas fa-folder-open mr-2"></i> 📂 Materiais de Apoio e Downloads
                 </summary>
