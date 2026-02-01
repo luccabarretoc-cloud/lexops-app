@@ -253,6 +253,17 @@
             transform: scale(2.7);
         }
 
+        /* ═══ PREMIUM LOGO STYLING ═══ */
+        #imgClient, #imgOffice, .logo-upload {
+            background: transparent !important;
+            box-shadow: none !important;
+            border: none !important;
+            object-fit: contain !important;
+            max-height: 50px !important;
+            margin: 0 15px !important;
+            padding: 0 !important;
+        }
+
         /* Garante que as opções do menu dropdown sejam sempre legíveis */
         select option {
             background-color: #FFFFFF !important;
@@ -518,17 +529,17 @@
                         <div class="space-y-1">
                             <label class="text-[10px] block font-medium admin-section-title">Cor de Destaque</label>
                             <div class="flex gap-2 items-center">
-                                <input type="color" id="accentColorInput" value="#4f46e5" onchange="updateAccentColor(this.value)" class="h-8 w-12 rounded cursor-pointer border border-slate-300">
+                                <input type="color" id="accentColorInput" value="#4f46e5" class="h-8 w-12 rounded cursor-pointer border border-slate-300">
                                 <span class="text-[9px] opacity-60 admin-section-title flex-1">Usado em botões e destaques</span>
                             </div>
                         </div>
                         <div class="space-y-1">
                             <label class="text-[10px] block font-medium admin-section-title">Título do Painel</label>
-                            <input type="text" id="panelTitleInput" value="Análise Jurídica Corporativa" onchange="updatePanelTitle(this.value)" class="w-full border text-xs rounded p-2 outline-none admin-select" placeholder="Ex: Painel do Cliente X">
+                            <input type="text" id="panelTitleInput" value="Análise Jurídica Corporativa" class="w-full border text-xs rounded p-2 outline-none admin-select" placeholder="Ex: Painel do Cliente X">
                         </div>
                         <div class="space-y-1">
                             <label class="text-[10px] block font-medium admin-section-title">Texto do Rodapé</label>
-                            <input type="text" id="footerTextInput" value="powered by LexOpsInsight" onchange="updateFooterText(this.value)" class="w-full border text-xs rounded p-2 outline-none admin-select" placeholder="Ex: Desenvolvido por [Seu Escritório]">
+                            <input type="text" id="footerTextInput" value="" class="w-full border text-xs rounded p-2 outline-none admin-select" placeholder="Texto personalizado opcional">
                         </div>
                     </div>
                 </div>
@@ -538,16 +549,16 @@
                     <div class="space-y-2">
                         <div class="space-y-1">
                             <label class="text-[10px] block font-medium admin-section-title">Fundo do Cabeçalho</label>
-                            <input type="color" id="headerBgInput" value="#ffffff" onchange="updateHeaderBg(this.value)" class="w-full h-8 rounded cursor-pointer border border-slate-300">
+                            <input type="color" id="headerBgInput" value="#ffffff" class="w-full h-8 rounded cursor-pointer border border-slate-300">
                         </div>
                         <div class="space-y-1">
                             <label class="text-[10px] block font-medium admin-section-title">Cor do Texto</label>
-                            <input type="color" id="headerTextInput" value="#111827" onchange="updateHeaderText(this.value)" class="w-full h-8 rounded cursor-pointer border border-slate-300">
+                            <input type="color" id="headerTextInput" value="#111827" class="w-full h-8 rounded cursor-pointer border border-slate-300">
                         </div>
                         <div class="space-y-1">
                             <label class="text-[10px] block font-medium admin-section-title">Opacidade do Fundo</label>
                             <div class="flex gap-2 items-center">
-                                <input type="range" id="headerOpacityInput" min="0" max="1" step="0.1" value="1" onchange="updateHeaderOpacity(this.value)" class="flex-1 cursor-pointer">
+                                <input type="range" id="headerOpacityInput" min="0" max="1" step="0.1" value="1" class="flex-1 cursor-pointer">
                                 <span class="text-[9px] opacity-60 admin-section-title w-8 text-right" id="opacityValue">100%</span>
                             </div>
                         </div>
@@ -853,80 +864,122 @@
 
         function fmtMoney(v) { return v.toLocaleString('pt-BR',{style:'currency',currency:'BRL'}); }
 
-        // Initialize immediately when scripts load
+        const debounce = (fn, delay = 150) => {
+            let timeoutId;
+            return (...args) => {
+                clearTimeout(timeoutId);
+                timeoutId = setTimeout(() => fn(...args), delay);
+            };
+        };
+
+        const setLoadingState = (isLoading) => {
+            document.body.style.cursor = isLoading ? 'wait' : 'default';
+        };
+
+        const updateCSSVar = (varName, value) => {
+            requestAnimationFrame(() => {
+                document.documentElement.style.setProperty(varName, value);
+            });
+        };
+
         // ═══════════════════════════════════════════════════════════════════════
-        // HIGH-PERFORMANCE APPLICATION INITIALIZATION
-        // Architecture: Event-Driven, Memory-Safe, Zero-Latency
+        // HYDRATED STATE BOOT ARCHITECTURE
+        // Offline-First SPA: Detects Admin Mode vs Client Mode
         // ═══════════════════════════════════════════════════════════════════════
-        (function() {
+
+        (function BOOT() {
             'use strict';
-            
-            // Utility: Debounce para inputs de texto (evita sobrecarga da Main Thread)
-            const debounce = (fn, delay = 150) => {
-                let timeoutId;
-                return (...args) => {
-                    clearTimeout(timeoutId);
-                    timeoutId = setTimeout(() => fn(...args), delay);
-                };
+
+            const BOOT_STATE = {
+                isOfflineMode: !!window.__OFFLINE_PAYLOAD__,
+                isDOMReady: false
             };
 
-            // Utility: Validação de arquivo
-            const validateFile = (file, allowedExtensions, maxSizeMB = 50) => {
-                if (!file) throw new Error('Nenhum arquivo selecionado');
-                
-                const extension = file.name.split('.').pop().toLowerCase();
-                if (!allowedExtensions.includes(extension)) {
-                    throw new Error(`Formato inválido. Permitidos: ${allowedExtensions.join(', ')}`);
-                }
-                
-                const maxSizeBytes = maxSizeMB * 1024 * 1024;
-                if (file.size > maxSizeBytes) {
-                    throw new Error(`Arquivo muito grande. Máximo: ${maxSizeMB}MB`);
-                }
-                
-                return true;
-            };
-
-            // Utility: Feedback visual durante operações pesadas
-            const setLoadingState = (isLoading) => {
-                document.body.style.cursor = isLoading ? 'wait' : 'default';
-            };
-
-            // Utility: Atualização de CSS Var com requestAnimationFrame (sincroniza com monitor)
-            const updateCSSVar = (varName, value) => {
-                requestAnimationFrame(() => {
-                    document.documentElement.style.setProperty(varName, value);
-                });
-            };
-
-            // ═══════════════════════════════════════════════════════════════════════
-            // MAIN INITIALIZATION ENTRY POINT
-            // ═══════════════════════════════════════════════════════════════════════
             if (document.readyState === 'loading') {
-                document.addEventListener('DOMContentLoaded', initializeApp);
+                document.addEventListener('DOMContentLoaded', bootApplication);
             } else {
-                initializeApp();
+                bootApplication();
             }
-            
-            function initializeApp() {
+
+            function bootApplication() {
                 try {
-                    // Critical dependency check
+                    BOOT_STATE.isDOMReady = true;
+
+                    if (BOOT_STATE.isOfflineMode) {
+                        bootClientMode();
+                    } else {
+                        bootAdminMode();
+                    }
+                } catch (error) {
+                    console.error('💥 Boot failed:', error);
+                    alert('Erro ao inicializar o sistema.');
+                }
+            }
+
+            // ═══════════════════════════════════════════════════════════════════════
+            // CLIENT MODE: Exported HTML (Read-Only Dashboard)
+            // ═══════════════════════════════════════════════════════════════════════
+            function bootClientMode() {
+                try {
+                    const payload = window.__OFFLINE_PAYLOAD__;
+
+                    // Hydrate state
+                    dStore = payload.dStore || [];
+                    customCharts = payload.customCharts || [];
+                    themeConfig = payload.themeConfig || {};
+                    colMapping = payload.colMapping || {};
+                    logoData = payload.logoData || {};
+                    layoutTheme = payload.layoutTheme || 'minimal';
+                    numericColumns = payload.numericColumns || [];
+                    mappedValueColumn = payload.mappedValueColumn || null;
+
+                    // Hide admin UI
+                    const sidebar = document.getElementById('adminPanel');
+                    if (sidebar) sidebar.style.display = 'none';
+
+                    // Full-width main
+                    const main = document.querySelector('main');
+                    if (main) {
+                        main.style.width = '100% !important';
+                        main.style.margin = '0 !important';
+                    }
+
+                    // Render
+                    document.body.classList.add('client-mode');
+                    applyTheme();
+                    applyLayoutTheme();
+                    applyLogos();
+                    applyLexOpsLogo();
+                    initFiltersUI();
+                    renderAll();
+
+                } catch (err) {
+                    console.error('Client mode boot failed:', err);
+                }
+            }
+
+            // ═══════════════════════════════════════════════════════════════════════
+            // ADMIN MODE: Upload & Editor Interface
+            // ═══════════════════════════════════════════════════════════════════════
+            function bootAdminMode() {
+                try {
                     if (!window.XLSX) {
-                        throw new Error('SheetJS library not loaded. Critical failure.');
+                        throw new Error('SheetJS not loaded');
                     }
 
                     initializeExcelUpload();
                     initializeLogoUploads();
                     initializeWhiteLabelControls();
-                    
+                    applyVisualEnhancements();
+
                 } catch (error) {
-                    console.error('❌ Application initialization failed:', error);
-                    alert('Erro crítico ao inicializar o sistema. Recarregue a página.');
+                    console.error('Admin mode boot failed:', error);
+                    alert('Erro ao inicializar o sistema.');
                 }
             }
 
             // ═══════════════════════════════════════════════════════════════════════
-            // EXCEL UPLOAD HANDLER (Defensive Programming)
+            // EXCEL UPLOAD: Robust SheetJS Integration
             // ═══════════════════════════════════════════════════════════════════════
             function initializeExcelUpload() {
                 const fileInput = document.getElementById('fileInput');
@@ -939,57 +992,64 @@
                     setLoadingState(true);
 
                     try {
-                        validateFile(file, ['xlsx', 'xls', 'csv'], 50);
+                        // Validation
+                        if (!file.name.match(/\.(xlsx?|csv)$/i)) {
+                            throw new Error('Formato inválido. Use XLSX, XLS ou CSV.');
+                        }
+                        if (file.size > 50 * 1024 * 1024) {
+                            throw new Error('Arquivo muito grande (máx. 50MB).');
+                        }
 
+                        // Parse
                         const arrayBuffer = await readFileAsArrayBuffer(file);
                         const workbook = XLSX.read(arrayBuffer, { type: 'array' });
-                        
+
                         if (!workbook.SheetNames.length) {
-                            throw new Error('A planilha está vazia ou corrompida');
+                            throw new Error('Planilha vazia ou corrompida.');
                         }
 
                         const firstSheet = workbook.Sheets[workbook.SheetNames[0]];
                         const rawData = XLSX.utils.sheet_to_json(firstSheet);
-                        
-                        if (!rawData || rawData.length === 0) {
-                            throw new Error('A planilha não contém dados válidos');
+
+                        if (!rawData || !rawData.length) {
+                            throw new Error('Nenhum dado encontrado na planilha.');
                         }
 
+                        // Success
                         rawHeaders = Object.keys(rawData[0]);
                         window._tempRaw = rawData;
                         showMapping();
 
                     } catch (error) {
-                        console.error('❌ Excel upload failed:', error);
-                        alert(`Erro ao processar arquivo:\n${error.message}`);
+                        alert(`❌ ${error.message}`);
+                        console.error(error);
                     } finally {
                         setLoadingState(false);
-                        fileInput.value = ''; // Limpa input para permitir re-upload do mesmo arquivo
+                        fileInput.value = '';
                     }
                 });
             }
 
-            // Helper: Promisify FileReader
             const readFileAsArrayBuffer = (file) => {
                 return new Promise((resolve, reject) => {
                     const reader = new FileReader();
                     reader.onload = (e) => resolve(e.target.result);
-                    reader.onerror = () => reject(new Error('Falha ao ler arquivo'));
+                    reader.onerror = () => reject(new Error('Falha ao ler arquivo.'));
                     reader.readAsArrayBuffer(file);
                 });
             };
 
             // ═══════════════════════════════════════════════════════════════════════
-            // LOGO UPLOADS HANDLER (Memory-Safe)
+            // LOGO UPLOADS: Memory-Safe Handlers
             // ═══════════════════════════════════════════════════════════════════════
             function initializeLogoUploads() {
-                const logoConfigs = [
+                const configs = [
                     { id: 'logoOffice', key: 'office' },
                     { id: 'logoClient', key: 'client' },
                     { id: 'lexopsMainLogo', key: 'lexops' }
                 ];
 
-                logoConfigs.forEach(({ id, key }) => {
+                configs.forEach(({ id, key }) => {
                     const input = document.getElementById(id);
                     if (!input) return;
 
@@ -998,75 +1058,242 @@
                         if (!file) return;
 
                         try {
-                            validateFile(file, ['jpg', 'jpeg', 'png', 'svg', 'webp'], 5);
+                            if (!file.name.match(/\.(jpg|jpeg|png|svg|webp)$/i)) {
+                                throw new Error('Formato inválido. Use JPG, PNG ou SVG.');
+                            }
+                            if (file.size > 5 * 1024 * 1024) {
+                                throw new Error('Imagem muito grande (máx. 5MB).');
+                            }
 
                             const dataURL = await readFileAsDataURL(file);
                             logoData[key] = dataURL;
                             applyLogos();
 
                         } catch (error) {
-                            console.error(`❌ Logo upload failed (${key}):`, error);
-                            alert(`Erro ao carregar logo:\n${error.message}`);
+                            alert(`❌ ${error.message}`);
                         } finally {
-                            input.value = ''; // Limpa input
+                            input.value = '';
                         }
                     });
                 });
             }
 
-            // Helper: Promisify FileReader (DataURL)
             const readFileAsDataURL = (file) => {
                 return new Promise((resolve, reject) => {
                     const reader = new FileReader();
                     reader.onload = (e) => resolve(e.target.result);
-                    reader.onerror = () => reject(new Error('Falha ao ler imagem'));
+                    reader.onerror = () => reject(new Error('Falha ao ler imagem.'));
                     reader.readAsDataURL(file);
                 });
             };
 
             // ═══════════════════════════════════════════════════════════════════════
-            // WHITE LABEL CONTROLS (Real-Time Rendering with RAF)
+            // REAL-TIME COLOR MOTOR: requestAnimationFrame + Input Event
             // ═══════════════════════════════════════════════════════════════════════
             function initializeWhiteLabelControls() {
-                // Color inputs (instant feedback via requestAnimationFrame)
-                const colorInputs = [
-                    { id: 'accentColorInput', handler: updateAccentColor },
+                // Color inputs (instant feedback via RAF)
+                const colorControls = [
+                    { id: 'accentColorInput', varName: '--primary-accent' },
                     { id: 'headerBgInput', handler: updateHeaderBg },
-                    { id: 'headerTextInput', handler: updateHeaderText }
+                    { id: 'headerTextInput', varName: '--header-text' }
                 ];
 
-                colorInputs.forEach(({ id, handler }) => {
+                colorControls.forEach(({ id, varName, handler }) => {
                     const input = document.getElementById(id);
                     if (!input) return;
-                    input.addEventListener('input', (e) => handler(e.target.value));
+
+                    input.addEventListener('input', (e) => {
+                        if (handler) {
+                            handler(e.target.value);
+                        } else if (varName) {
+                            updateCSSVar(varName, e.target.value);
+                        }
+                    });
                 });
 
-                // Text inputs (debounced para reduzir carga)
-                const textInputs = [
+                // Text inputs (debounced)
+                const textControls = [
                     { id: 'panelTitleInput', handler: updatePanelTitle },
                     { id: 'footerTextInput', handler: updateFooterText }
                 ];
 
-                textInputs.forEach(({ id, handler }) => {
+                textControls.forEach(({ id, handler }) => {
                     const input = document.getElementById(id);
                     if (!input) return;
                     input.addEventListener('input', debounce((e) => handler(e.target.value), 100));
                 });
 
-                // Range input (opacity slider)
+                // Opacity slider
                 const opacityInput = document.getElementById('headerOpacityInput');
                 if (opacityInput) {
                     opacityInput.addEventListener('input', (e) => updateHeaderOpacity(e.target.value));
                 }
             }
+
+            // ═══════════════════════════════════════════════════════════════════════
+            // VISUAL ENHANCEMENTS: HDR & Premium CSS
+            // ═══════════════════════════════════════════════════════════════════════
+            function applyVisualEnhancements() {
+                const style = document.createElement('style');
+                style.textContent = `
+                    /* HDR Shadows & Glassmorphism */
+                    .metric-card, .chart-container, .card, .glass {
+                        box-shadow: 0 10px 30px -5px rgba(0, 0, 0, 0.08), 
+                                   0 4px 10px -5px rgba(0, 0, 0, 0.04) !important;
+                        border: 1px solid rgba(255, 255, 255, 0.6) !important;
+                        backdrop-filter: blur(10px) !important;
+                    }
+
+                    /* Inter Typography */
+                    body, input, button, select, textarea {
+                        font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif !important;
+                        -webkit-font-smoothing: antialiased !important;
+                        -moz-osx-font-smoothing: grayscale !important;
+                    }
+
+                    /* Premium Buttons */
+                    button {
+                        transition: all 0.2s ease !important;
+                    }
+                    button:hover {
+                        transform: translateY(-2px) !important;
+                        box-shadow: 0 8px 16px rgba(0, 0, 0, 0.12) !important;
+                    }
+
+                    /* Logo Styling */
+                    #imgClient, #imgOffice, #lexopsLogoImg {
+                        max-height: 45px !important;
+                        object-fit: contain !important;
+                        background: transparent !important;
+                        border: none !important;
+                        box-shadow: none !important;
+                    }
+                `;
+                document.head.appendChild(style);
+            }
+
         })();
 
-        window.onload = function() {
-            setTimeout(() => {
-                applyLexOpsLogo();
+        // ═══════════════════════════════════════════════════════════════════════
+        // EXPORT ENGINE: Intelligent Client-Side Build Pipeline
+        // ═══════════════════════════════════════════════════════════════════════
 
-                const dataIsland = document.getElementById('consolidated-data');
-                if (dataIsland && dataIsland.textContent.trim().length > 0) {
+        function exportConsolidatedHTML() {
+            // Sanity check
+            if (!dStore || dStore.length === 0) {
+                alert('⚠️ Nenhum dado para exportar. Importe uma planilha primeiro.');
+                return;
+            }
+
+            const clone = document.documentElement.cloneNode(true);
+            const body = clone.querySelector('body');
+
+            // Step 1: Enable client mode
+            if (body) {
+                body.classList.add('client-mode');
+            }
+
+            // Step 2: Sanitization (Remove admin UI)
+            ['#adminPanel', '.no-export'].forEach(selector => {
+                clone.querySelectorAll(selector).forEach(el => el.remove());
+            });
+
+            // CRITICAL: KEEP #clientControls (filter bar)
+            // Do NOT remove it
+
+            // Step 3: State Injection (Hydration)
+            const offlinePayloadScript = document.createElement('script');
+            offlinePayloadScript.textContent = `
+                window.__OFFLINE_PAYLOAD__ = {
+                    dStore: ${JSON.stringify(dStore)},
+                    customCharts: ${JSON.stringify(customCharts)},
+                    themeConfig: ${JSON.stringify(themeConfig)},
+                    colMapping: ${JSON.stringify(colMapping)},
+                    logoData: ${JSON.stringify(logoData)},
+                    layoutTheme: '${layoutTheme}',
+                    numericColumns: ${JSON.stringify(numericColumns)},
+                    mappedValueColumn: ${mappedValueColumn ? JSON.stringify(mappedValueColumn) : 'null'}
+                };
+            `;
+
+            const head = clone.querySelector('head');
+            if (head) head.appendChild(offlinePayloadScript);
+
+            // Step 4: CSS Freeze (Color Persistence)
+            const cssVarsStyle = document.createElement('style');
+            const primaryAccent = getComputedStyle(document.documentElement).getPropertyValue('--primary-accent').trim() || '#4f46e5';
+            const headerBgRgb = getComputedStyle(document.documentElement).getPropertyValue('--header-bg-rgb').trim() || '255,255,255';
+            const headerText = getComputedStyle(document.documentElement).getPropertyValue('--header-text').trim() || '#111827';
+            const headerOpacity = getComputedStyle(document.documentElement).getPropertyValue('--header-opacity').trim() || '1';
+
+            cssVarsStyle.textContent = `
+                :root {
+                    --primary-accent: ${primaryAccent};
+                    --header-bg-rgb: ${headerBgRgb};
+                    --header-text: ${headerText};
+                    --header-opacity: ${headerOpacity};
+                }
+                #imgClient, #imgOffice, #lexopsLogoImg {
+                    background: transparent !important;
+                    border: 0px none !important;
+                    box-shadow: none !important;
+                    outline: none !important;
+                    max-height: 50px !important;
+                    object-fit: contain !important;
+                    margin: 0 15px !important;
+                    padding: 0 !important;
+                }
+                .header-section {
+                    border: none !important;
+                    box-shadow: none !important;
+                }
+            `;
+            if (head) head.appendChild(cssVarsStyle);
+
+            // Step 5: Logo Blindage (Inline styles)
+            ['#imgClient', '#imgOffice', '#lexopsLogoImg', 'img[id*="Client"]', 'img[id*="Office"]'].forEach(selector => {
+                clone.querySelectorAll(selector).forEach(logo => {
+                    logo.style.cssText = 'background: transparent !important; ' +
+                                        'border: 0px none !important; ' +
+                                        'box-shadow: none !important; ' +
+                                        'outline: none !important; ' +
+                                        'max-height: 50px !important; ' +
+                                        'object-fit: contain !important; ' +
+                                        'margin: 0 15px !important; ' +
+                                        'padding: 0 !important;';
+                });
+            });
+
+            // Step 6: Footer Injection
+            if (body) {
+                const footerInput = document.getElementById('footerTextInput');
+                const footerText = footerInput && footerInput.value.trim() ? footerInput.value : 'Powered by LexOps Insight';
+
+                const footer = document.createElement('div');
+                footer.style.cssText = 'width: 100%; ' +
+                                      'text-align: center; ' +
+                                      'padding: 20px 0; ' +
+                                      'margin-top: 40px; ' +
+                                      'border-top: 1px solid #e5e7eb; ' +
+                                      'color: #9ca3af; ' +
+                                      'font-size: 11px; ' +
+                                      'font-family: sans-serif; ' +
+                                      'clear: both; ' +
+                                      'box-sizing: border-box;';
+                footer.innerHTML = `<p style="margin: 0; font-weight: 500;">${footerText}</p>`;
+                body.appendChild(footer);
+            }
+
+            // Step 7: Download
+            const htmlContent = `<!DOCTYPE html>\n${clone.outerHTML}`;
+            const blob = new Blob([htmlContent], { type: 'text/html' });
+            const a = document.createElement('a');
+            a.href = URL.createObjectURL(blob);
+            a.download = 'Dashboard_Juridico_LexOpsInsight.html';
+            a.click();
+
+            setTimeout(() => URL.revokeObjectURL(a.href), 100);
+        }
                     try {
                         const rawJson = JSON.parse(dataIsland.textContent);
                         window.dStore = JSON.parse(b64DecodeUnicode(rawJson.dStore));
@@ -1586,7 +1813,7 @@
             document.documentElement.style.setProperty('--header-opacity', '1');
             if(document.getElementById('accentColorInput')) document.getElementById('accentColorInput').value = '#4f46e5';
             if(document.getElementById('panelTitleInput')) document.getElementById('panelTitleInput').value = 'Análise Jurídica Corporativa';
-            if(document.getElementById('footerTextInput')) document.getElementById('footerTextInput').value = 'powered by LexOpsInsight';
+            if(document.getElementById('footerTextInput')) document.getElementById('footerTextInput').value = '';
             if(document.getElementById('headerBgInput')) document.getElementById('headerBgInput').value = '#ffffff';
             if(document.getElementById('headerTextInput')) document.getElementById('headerTextInput').value = '#111827';
             if(document.getElementById('headerOpacityInput')) document.getElementById('headerOpacityInput').value = '1';
@@ -2082,65 +2309,6 @@
         
         function closeDetail() { document.getElementById('detailModal').classList.replace('flex','hidden'); }
 
-        function exportConsolidatedHTML() {
-            const safePayload = {
-                dStore: b64EncodeUnicode(JSON.stringify(dStore)),
-                customCharts: b64EncodeUnicode(JSON.stringify(customCharts)),
-                themeConfig: b64EncodeUnicode(JSON.stringify(themeConfig)),
-                colMapping: b64EncodeUnicode(JSON.stringify(colMapping)),
-                logoData: b64EncodeUnicode(JSON.stringify(logoData)),
-                layoutTheme: layoutTheme,
-                numericColumns: numericColumns,
-                mappedValueColumn: mappedValueColumn
-            };
-
-            const clone = document.documentElement.cloneNode(true);
-            
-            // Remover painel administrativo (segurança máxima)
-            const adminPanel = clone.querySelector('#adminPanel');
-            if(adminPanel) adminPanel.remove();
-            
-            // Remover cliente-controls
-            const clientControls = clone.querySelector('#clientControls');
-            if(clientControls) clientControls.remove();
-            
-            // Remover qualquer elemento com classe no-export
-            const noExportElements = clone.querySelectorAll('.no-export');
-            noExportElements.forEach(el => el.remove());
-            
-            const loader = clone.querySelector('#pageLoader');
-            if(loader) loader.style.opacity = '1';
-
-            // Injetar CSS customizado com variáveis White Label
-            const style = clone.querySelector('style');
-            if(style) {
-                const cssVars = `
-                    :root {
-                        --primary-accent: ${getComputedStyle(document.documentElement).getPropertyValue('--primary-accent').trim() || '#4f46e5'};
-                        --header-bg-rgb: ${getComputedStyle(document.documentElement).getPropertyValue('--header-bg-rgb').trim() || '255,255,255'};
-                        --header-text: ${getComputedStyle(document.documentElement).getPropertyValue('--header-text').trim() || '#111827'};
-                        --header-opacity: ${getComputedStyle(document.documentElement).getPropertyValue('--header-opacity').trim() || '1'};
-                    }
-                `;
-                style.textContent = cssVars + style.textContent + "\nbody.client-mode .admin-panel { display: none !important; } body.client-mode .client-controls { display: flex !important; }";
-            }
-
-            // Injetar script de Modo Offline logo no início do head
-            const head = clone.querySelector('head');
-            const offlineScript = document.createElement('script');
-            offlineScript.textContent = 'window.LEXOPS_OFFLINE_MODE = true;';
-            if(head) head.insertBefore(offlineScript, head.firstChild);
-
-            const dataScript = clone.querySelector('#consolidated-data');
-            if(dataScript) dataScript.textContent = JSON.stringify(safePayload);
-
-            const htmlContent = `<!DOCTYPE html>\n${clone.outerHTML}`;
-            const blob = new Blob([htmlContent], {type: 'text/html'});
-            const a = document.createElement('a');
-            a.href = URL.createObjectURL(blob);
-            a.download = 'Dashboard_Juridico_LexOpsInsight.html';
-            a.click();
-        }
     </script>
 
     </div>
