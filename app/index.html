@@ -45,10 +45,10 @@
             --layout-sidebar-text: #f8fafc; 
             --layout-sidebar-border: #1e293b;
 
-            /* Variáveis do Cabeçalho (White Label) - CORREÇÃO APLICADA AQUI */
-            --header-bg-rgb: 255, 255, 255; /* Padrão Branco */
-            --header-opacity: 1;            /* Padrão Sólido */
-            --header-text: #111827;         /* Padrão Escuro */
+            /* Variáveis do Cabeçalho (White Label) */
+            --header-bg-rgb: 255, 255, 255; 
+            --header-opacity: 1;            
+            --header-text: #111827;         
         }
         
         /* === BASE === */
@@ -60,7 +60,7 @@
         }
 
         /* =========================================
-           CORREÇÃO 1: LOGO LEXOPS (OCUPANDO O CANTO)
+           1. LOGO LEXOPS (OCUPANDO O CANTO)
            ========================================= */
         .lexops-logo-admin {
             display: flex; 
@@ -84,57 +84,63 @@
         }
 
         /* =========================================
-           CORREÇÃO 2: CAMPOS DA BARRA LATERAL (LEITURA)
+           2. CAMPOS DA BARRA LATERAL (LEITURA)
            ========================================= */
-        /* Força fundo escuro e texto branco nos inputs da esquerda */
         #adminPanel select, 
         #adminPanel input[type="text"], 
         #adminPanel input[type="number"], 
         #adminPanel input[type="color"],
         #adminPanel textarea {
-            background-color: #1e293b !important; /* Fundo Escuro Sólido */
-            color: #ffffff !important; /* Texto Branco */
+            background-color: #1e293b !important; 
+            color: #ffffff !important; 
             border: 1px solid rgba(255, 255, 255, 0.2) !important;
         }
-
-        /* Opções do Dropdown (Fundo Branco, Texto Preto) */
         #adminPanel select option {
             background-color: #ffffff !important;
             color: #1e293b !important;
         }
-
-        /* Placeholder mais claro para ler */
         #adminPanel input::placeholder {
             color: rgba(255, 255, 255, 0.5) !important;
         }
 
         /* =========================================
-           LOGOS CLIENTE/ESCRITÓRIO (PROTEGIDAS)
+           3. LOGOS CLIENTE/ESCRITÓRIO (TRATAMENTO VISUAL)
            ========================================= */
         .logo-resizable-wrapper {
             display: inline-flex; resize: both; overflow: hidden; vertical-align: middle; position: relative;
-            border: 1px dashed rgba(0,0,0,0.1); 
+            /* Borda transparente por padrão para não sujar o visual */
+            border: 1px dashed transparent; 
             width: 140px; height: 70px; 
             min-width: 50px; max-width: 600px; min-height: 30px; max-height: 300px;
+            transition: border-color 0.2s;
         }
-        .logo-resizable-wrapper:hover { border-color: rgba(0,0,0,0.4); cursor: nwse-resize; background: rgba(0,0,0,0.02); }
+        /* Borda tracejada aparece SÓ ao passar o mouse para ajustar */
+        .logo-resizable-wrapper:hover { 
+            border-color: rgba(0,0,0,0.4); 
+            cursor: nwse-resize; 
+            background: rgba(0,0,0,0.02); 
+        }
         .logo-resizable-wrapper:hover::after {
             content: ''; position: absolute; bottom: 0; right: 0; width: 12px; height: 12px;
             background: linear-gradient(135deg, transparent 50%, #94a3b8 50%); pointer-events: none;
         }
+        
         .logo-resizable-wrapper img {
             width: 100% !important; height: 100% !important;
-            object-fit: contain; pointer-events: none;
+            object-fit: contain; 
+            pointer-events: none;
+            
+            /* O SEGREDO DO TRATAMENTO: */
+            /* Remove o fundo branco chapado mesclando com o fundo */
+            mix-blend-mode: multiply; 
+            display: block;
         }
         #clientLogo, #officeLogo { display: none; }
 
         /* =========================================
-           FILTROS LEGÍVEIS (TEXTO ESCURO)
+           4. FILTROS LEGÍVEIS (TEXTO ESCURO)
            ========================================= */
-        #clientControls, #clientControls * {
-            color: #0f172a !important; 
-            border-color: #cbd5e1;
-        }
+        #clientControls, #clientControls * { color: #0f172a !important; border-color: #cbd5e1; }
         #clientControls button:hover { background-color: #f1f5f9 !important; }
         #globalSearch { background: #ffffff !important; color: #0f172a !important; border: 1px solid #cbd5e1 !important; }
         .filter-dropdown { background: #ffffff !important; border-color: #e2e8f0 !important; }
@@ -147,35 +153,46 @@
         .glass-dark { background: var(--layout-sidebar); color: var(--layout-sidebar-text); }
         .admin-panel { display: flex; flex-direction: column; }
         
-        /* CORREÇÃO APLICADA AQUI: HEADER DINÂMICO */
+        /* HEADER DINÂMICO */
         .brand-header {
             height: 9rem; 
-            /* Agora usa as variáveis controladas pelo painel admin */
             background: rgba(var(--header-bg-rgb), var(--header-opacity)); 
             color: var(--header-text);
             border-bottom: 1px solid #e0e0e0;
             display: flex; align-items: center; padding: 0 1.5rem; justify-content: space-between;
-            transition: background 0.3s, color 0.3s; /* Suaviza a troca de cor */
+            transition: background 0.3s, color 0.3s;
         }
         
         .header-section { flex: 1; display: flex; align-items: center; height: 100%; }
         .header-left { justify-content: flex-end; padding-right: 1rem; }
         .header-right { justify-content: flex-start; padding-left: 1rem; }
+        
+        /* CORREÇÃO APLICADA AQUI: CENTRALIZAÇÃO FORÇADA */
         .header-center { 
-            flex: 0 0 380px; display: flex; flex-direction: column; align-items: center; justify-content: center;
-            border-left: 1px solid #E5E7EB; border-right: 1px solid #E5E7EB; height: 70%;
-            /* Herda a cor do texto do header pai */
+            flex: 0 0 380px; 
+            display: flex; 
+            flex-direction: column; 
+            align-items: center;      /* Centraliza horizontalmente flex items */
+            justify-content: center;  /* Centraliza verticalmente flex items */
+            text-align: center;       /* Centraliza o texto dentro dos blocos */
+            border-left: 1px solid #E5E7EB; 
+            border-right: 1px solid #E5E7EB; 
+            height: 70%;
             color: inherit; 
         }
         .header-center h1 { 
             font-size: 1.5rem; font-weight: 900; text-transform: uppercase; 
             line-height: 1; margin: 0; 
-            color: inherit; /* Herda a cor personalizada */
+            width: 100%;             /* Garante largura total para o text-align funcionar */
+            text-align: center;      /* Reforço */
+            color: inherit; 
         }
         .header-center p { 
             font-size: 0.65rem; font-style: italic; 
             margin-top: 0.3rem;
-            opacity: 0.7; /* Herda a cor mas um pouco mais claro */
+            width: 100%;             /* Garante largura total */
+            text-align: center;      /* Reforço */
+            opacity: 0.7; 
             color: inherit;
         }
         
