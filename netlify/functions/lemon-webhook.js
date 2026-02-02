@@ -30,9 +30,12 @@ exports.handler = async (event, context) => {
     const { meta, data } = payload;
     
     const eventName = meta.event_name;
-    const userEmail = data.attributes.user_email;
-    const productName = data.attributes.product_name || 'Plano LexOps';
-    const status = data.attributes.status || 'active'; // Captura o status da assinatura (active, cancelled, etc)
+    const attributes = data.attributes;
+    const userEmail = attributes.user_email;
+    const productName = attributes.product_name || 'Plano LexOps';
+    const status = attributes.status || 'active';
+    // Pega a data de renovação do Lemon Squeezy para usar como expiração
+    const renewsAt = attributes.renews_at || new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString();
 
     console.log(`Processando evento: ${eventName} para: ${userEmail}`);
 
@@ -48,7 +51,8 @@ exports.handler = async (event, context) => {
           email: userEmail, 
           token: tokenAcesso,
           plan: productName,
-          subscription_status: status, // Adicionada a coluna que faltava
+          subscription_status: status,
+          expires_at: renewsAt, // Agora enviando a expiração
           created_at: new Date().toISOString(),
           is_active: true
         }, { onConflict: 'email' });
@@ -58,7 +62,7 @@ exports.handler = async (event, context) => {
         throw error;
       }
 
-      console.log(`Sucesso! Acesso liberado para ${userEmail}`);
+      console.log(`Sucesso! Acesso liberado para ${userEmail} até ${renewsAt}`);
     }
 
     return { 
