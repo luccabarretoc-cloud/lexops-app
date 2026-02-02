@@ -346,56 +346,61 @@
         }
     </style>
 <script id="auth-logic">
-(async function() {
-    // A. MODO CLIENTE (OFFLINE/EXPORTADO)
-    // Se existe payload de dados, libera acesso mas bloqueia edição.
+(function() {
+    // LÓGICA DE AUTENTICAÇÃO OTIMISTA (SÍNCRONA)
+    // Evita tela branca garantindo resposta imediata ao navegador
+
+    // 1. MODO CLIENTE (OFFLINE) - Prioridade Total
     if (window.__OFFLINE_PAYLOAD__) {
-        console.log("📂 Visualização do Cliente (Offline)");
+        console.log("📂 Modo Offline Detectado");
         window.__ACCESS_GRANTED__ = true;
-        window.isAdmin = false; // Desativa painel admin
+        window.isAdmin = false;
         document.documentElement.classList.add('client-view');
-        return;
+        return; // Sai da função, acesso garantido
     }
 
-    // B. MODO ADMIN (ONLINE)
-    // Exige validação via API (Supabase/Netlify) como nas versões anteriores.
+    // 2. MODO ONLINE (ADMIN)
     const params = new URLSearchParams(window.location.search);
     const token = params.get('t') || localStorage.getItem('lexops_token');
     
-    // URL da API (Ajuste para seu endpoint real se necessário)
+    // URL da API (Backup)
     const API_ENDPOINT = "/.netlify/functions/validateToken"; 
 
-    if (!token) {
-        console.warn("🔒 Token não detectado.");
+    if (token && token.length > 5) {
+        // [CORREÇÃO CRÍTICA] Libera acesso IMEDIATAMENTE (Otimista)
+        // Isso impede a tela branca enquanto a API pensa
+        window.__ACCESS_GRANTED__ = true;
+        window.isAdmin = true;
+        localStorage.setItem('lexops_token', token);
+        console.log("🔓 Acesso Liberado (Preliminar)");
+
+        // Validação de Fundo (Assíncrona - não trava a tela)
+        // Se a API disser que o token é falso, nós bloqueamos DEPOIS.
+        fetch(`${API_ENDPOINT}?token=${token}`)
+            .then(r => r.json())
+            .then(data => {
+                if (!data.valid) {
+                    console.error("❌ Token revogado pela API");
+                    bloquearTudo();
+                }
+            })
+            .catch(() => console.log("⚠️ API Offline - Mantendo acesso local"));
+
+    } else {
+        // Sem token = Bloqueio Imediato
         window.__ACCESS_GRANTED__ = false;
-        return;
+        console.warn("🔒 Token não encontrado");
     }
 
-    try {
-        // Validação Real via Fetch (Restaurando lógica antiga)
-        // Se der erro 401/403 ou catch, o acesso permanece negado.
-        const response = await fetch(`${API_ENDPOINT}?token=${token}`);
-        
-        if (response.ok) {
-            const data = await response.json();
-            if (data.valid) {
-                window.__ACCESS_GRANTED__ = true;
-                window.isAdmin = true;
-                localStorage.setItem('lexops_token', token);
-                console.log("🔓 Token Validado na API");
-            } else {
-                throw new Error("Token inválido");
-            }
-        } else {
-             // Fallback para não travar se a API estiver dormindo (Opcional)
-             if(token.length > 10) { 
-                 window.__ACCESS_GRANTED__ = true; 
-                 window.isAdmin = true;
-             }
-        }
-    } catch (e) {
-        console.error("Erro na validação API:", e);
+    function bloquearTudo() {
         window.__ACCESS_GRANTED__ = false;
+        window.isAdmin = false;
+        localStorage.removeItem('lexops_token');
+        const p = document.getElementById('protectedContent');
+        if(p) p.style.display = 'none';
+        const e = document.getElementById('accessError');
+        if(e) { e.style.display = 'flex'; e.classList.add('active'); }
+        alert("Sessão Expirada. Recarregue com um token válido.");
     }
 })();
 </script>
