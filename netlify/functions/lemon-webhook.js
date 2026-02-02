@@ -31,7 +31,8 @@ exports.handler = async (event, context) => {
     
     const eventName = meta.event_name;
     const userEmail = data.attributes.user_email;
-    const productName = data.attributes.product_name || 'Plano LexOps'; // Captura o nome do plano
+    const productName = data.attributes.product_name || 'Plano LexOps';
+    const status = data.attributes.status || 'active'; // Captura o status da assinatura (active, cancelled, etc)
 
     console.log(`Processando evento: ${eventName} para: ${userEmail}`);
 
@@ -41,13 +42,13 @@ exports.handler = async (event, context) => {
       const supabase = createClient(supabaseUrl, supabaseKey);
       const tokenAcesso = crypto.randomBytes(16).toString('hex');
 
-      // Correção: Agora enviando a coluna 'plan' que o seu banco exige
       const { error } = await supabase
         .from('access_tokens')
         .upsert({ 
           email: userEmail, 
           token: tokenAcesso,
-          plan: productName, // Aqui enviamos o valor para a coluna 'plan'
+          plan: productName,
+          subscription_status: status, // Adicionada a coluna que faltava
           created_at: new Date().toISOString(),
           is_active: true
         }, { onConflict: 'email' });
@@ -57,7 +58,7 @@ exports.handler = async (event, context) => {
         throw error;
       }
 
-      console.log(`Sucesso! Token gerado para ${userEmail} no plano ${productName}`);
+      console.log(`Sucesso! Acesso liberado para ${userEmail}`);
     }
 
     return { 
