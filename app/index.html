@@ -347,87 +347,78 @@
     </style>
 <script id="auth-logic">
 (function() {
-    // LÓGICA DE AUTENTICAÇÃO + DESBLOQUEIO VISUAL
-    // Garante que o CSS 'display: none' seja removido
-
-    function unlockVisuals() {
+    // 1. Função de Desbloqueio Visual (Só roda quando a tela existe)
+    function unlockUI() {
         const app = document.getElementById('protectedContent');
-        const err = document.getElementById('accessError');
         const loader = document.getElementById('pageLoader');
+        const err = document.getElementById('accessError');
 
-        if (app) app.style.display = 'flex'; // <--- A LINHA QUE FALTAVA
+        // Remove Loader
+        if (loader) loader.style.display = 'none';
+
+        // Mostra o App (Garante display flex e remove hidden se existir)
+        if (app) {
+            app.classList.remove('hidden'); 
+            app.style.display = 'flex';
+        }
+
+        // Esconde erro
         if (err) {
             err.classList.remove('active');
             err.style.display = 'none';
         }
-        if (loader) loader.style.display = 'none';
-        
-        console.log("🚀 Interface Desbloqueada Visualmente");
     }
 
-    function runAuthCheck() {
-        // 1. MODO CLIENTE (OFFLINE) - Prioridade Total
+    // 2. Lógica de Decisão (Quem entra e quem não entra)
+    function checkPermission() {
+        // A. Cliente Offline (Arquivo Exportado)
         if (window.__OFFLINE_PAYLOAD__) {
-            console.log("📂 Modo Offline Detectado");
             window.__ACCESS_GRANTED__ = true;
             window.isAdmin = false;
             document.documentElement.classList.add('client-view');
-            unlockVisuals(); // Libera a tela
+            unlockUI(); // <--- Libera visual
             return;
         }
 
-        // 2. MODO ONLINE (ADMIN)
+        // B. Admin Online (Link com Token)
         const params = new URLSearchParams(window.location.search);
         const token = params.get('t') || localStorage.getItem('lexops_token');
-        
-        // URL da API (Backup)
-        const API_ENDPOINT = "/.netlify/functions/validateToken"; 
+        const API_ENDPOINT = "/.netlify/functions/validateToken";
 
         if (token && token.length > 5) {
-            // [SUCESSO] Token parece válido
+            // Sucesso Preliminar
             window.__ACCESS_GRANTED__ = true;
             window.isAdmin = true;
             localStorage.setItem('lexops_token', token);
-            
-            unlockVisuals(); // <--- Libera a tela IMEDIATAMENTE
+            unlockUI(); // <--- Libera visual IMEDIATAMENTE
 
-            // Validação de Fundo (Opcional - não trava a tela)
+            // Validação de Fundo (Sem travar tela)
             fetch(`${API_ENDPOINT}?token=${token}`)
                 .then(r => r.json())
-                .then(data => {
-                    if (!data.valid) {
-                        console.error("❌ Token revogado pela API");
-                        bloquearTudo();
-                    }
-                })
-                .catch(() => console.log("⚠️ API Offline - Mantendo acesso local"));
-
+                .then(d => { if(!d.valid) bloquear(); })
+                .catch(e => console.log("API Check Skipped"));
         } else {
-            // [ERRO] Sem token
-            window.__ACCESS_GRANTED__ = false;
-            console.warn("🔒 Token não encontrado");
-            // Se falhar, garante que o erro apareça
-            const err = document.getElementById('accessError');
-            if(err) { err.style.display = 'flex'; err.classList.add('active'); }
+            bloquear();
         }
     }
 
-    function bloquearTudo() {
+    function bloquear() {
         window.__ACCESS_GRANTED__ = false;
-        window.isAdmin = false;
-        localStorage.removeItem('lexops_token');
-        const p = document.getElementById('protectedContent');
-        if(p) p.style.display = 'none';
-        const e = document.getElementById('accessError');
-        if(e) { e.style.display = 'flex'; e.classList.add('active'); }
-        alert("Sessão Expirada. Recarregue com um token válido.");
+        const app = document.getElementById('protectedContent');
+        const err = document.getElementById('accessError');
+        const loader = document.getElementById('pageLoader');
+        
+        if(app) app.style.display = 'none';
+        if(loader) loader.style.display = 'none';
+        if(err) { err.style.display = 'flex'; err.classList.add('active'); }
     }
 
-    // AGUARDA O DOM ESTAR PRONTO (Essencial para não dar erro de 'null')
+    // 3. O SEGREDO: Só executa quando o navegador terminar de montar o HTML
     if (document.readyState === 'loading') {
-        document.addEventListener('DOMContentLoaded', runAuthCheck);
+        document.addEventListener('DOMContentLoaded', checkPermission);
     } else {
-        runAuthCheck();
+        // Se já carregou, roda direto
+        checkPermission();
     }
 })();
 </script>
