@@ -31,10 +31,24 @@
         <style>
         /* === VARIÁVEIS VISUAIS === */
         :root { 
-            --brand-500: #4f46e5; --brand-600: #4338ca; --primary-accent: #4f46e5;
-            --layout-bg: #e2e8f0; --layout-card: #ffffff; --layout-text: #111827;
-            --layout-border: #E5E7EB; --layout-accent: #F3F4F6;
-            --layout-sidebar: #0f172a; --layout-sidebar-text: #f8fafc; --layout-sidebar-border: #1e293b;
+            --brand-500: #4f46e5; 
+            --brand-600: #4338ca; 
+            --primary-accent: #4f46e5;
+            
+            /* Variáveis de Layout */
+            --layout-bg: #e2e8f0; 
+            --layout-card: #ffffff; 
+            --layout-text: #111827;
+            --layout-border: #E5E7EB; 
+            --layout-accent: #F3F4F6;
+            --layout-sidebar: #0f172a; 
+            --layout-sidebar-text: #f8fafc; 
+            --layout-sidebar-border: #1e293b;
+
+            /* Variáveis do Cabeçalho (White Label) - CORREÇÃO APLICADA AQUI */
+            --header-bg-rgb: 255, 255, 255; /* Padrão Branco */
+            --header-opacity: 1;            /* Padrão Sólido */
+            --header-text: #111827;         /* Padrão Escuro */
         }
         
         /* === BASE === */
@@ -83,8 +97,7 @@
             border: 1px solid rgba(255, 255, 255, 0.2) !important;
         }
 
-        /* CORREÇÃO CRÍTICA: Opções do Dropdown (Fundo Branco, Texto Preto) */
-        /* Isso resolve o problema de não conseguir ler as opções ao clicar */
+        /* Opções do Dropdown (Fundo Branco, Texto Preto) */
         #adminPanel select option {
             background-color: #ffffff !important;
             color: #1e293b !important;
@@ -133,19 +146,38 @@
         #protectedContent { display: none; width: 100%; height: 100%; flex: 1; overflow: hidden; }
         .glass-dark { background: var(--layout-sidebar); color: var(--layout-sidebar-text); }
         .admin-panel { display: flex; flex-direction: column; }
+        
+        /* CORREÇÃO APLICADA AQUI: HEADER DINÂMICO */
         .brand-header {
-            height: 9rem; background: #fff; border-bottom: 1px solid #e0e0e0;
+            height: 9rem; 
+            /* Agora usa as variáveis controladas pelo painel admin */
+            background: rgba(var(--header-bg-rgb), var(--header-opacity)); 
+            color: var(--header-text);
+            border-bottom: 1px solid #e0e0e0;
             display: flex; align-items: center; padding: 0 1.5rem; justify-content: space-between;
+            transition: background 0.3s, color 0.3s; /* Suaviza a troca de cor */
         }
+        
         .header-section { flex: 1; display: flex; align-items: center; height: 100%; }
         .header-left { justify-content: flex-end; padding-right: 1rem; }
         .header-right { justify-content: flex-start; padding-left: 1rem; }
         .header-center { 
             flex: 0 0 380px; display: flex; flex-direction: column; align-items: center; justify-content: center;
             border-left: 1px solid #E5E7EB; border-right: 1px solid #E5E7EB; height: 70%;
+            /* Herda a cor do texto do header pai */
+            color: inherit; 
         }
-        .header-center h1 { font-size: 1.5rem; font-weight: 900; text-transform: uppercase; color: #1E293B; line-height: 1; margin: 0; }
-        .header-center p { font-size: 0.65rem; font-style: italic; color: #9CA3AF; margin-top: 0.3rem; }
+        .header-center h1 { 
+            font-size: 1.5rem; font-weight: 900; text-transform: uppercase; 
+            line-height: 1; margin: 0; 
+            color: inherit; /* Herda a cor personalizada */
+        }
+        .header-center p { 
+            font-size: 0.65rem; font-style: italic; 
+            margin-top: 0.3rem;
+            opacity: 0.7; /* Herda a cor mas um pouco mais claro */
+            color: inherit;
+        }
         
         .logo-placeholder { 
             border: 1px solid #e0e0e0; border-radius: 4px; padding: 0.8rem 1.5rem; 
