@@ -347,49 +347,69 @@
     </style>
 <script id="auth-logic">
 (function() {
-    // LÓGICA DE AUTENTICAÇÃO OTIMISTA (SÍNCRONA)
-    // Evita tela branca garantindo resposta imediata ao navegador
+    // LÓGICA DE AUTENTICAÇÃO + DESBLOQUEIO VISUAL
+    // Garante que o CSS 'display: none' seja removido
 
-    // 1. MODO CLIENTE (OFFLINE) - Prioridade Total
-    if (window.__OFFLINE_PAYLOAD__) {
-        console.log("📂 Modo Offline Detectado");
-        window.__ACCESS_GRANTED__ = true;
-        window.isAdmin = false;
-        document.documentElement.classList.add('client-view');
-        return; // Sai da função, acesso garantido
+    function unlockVisuals() {
+        const app = document.getElementById('protectedContent');
+        const err = document.getElementById('accessError');
+        const loader = document.getElementById('pageLoader');
+
+        if (app) app.style.display = 'flex'; // <--- A LINHA QUE FALTAVA
+        if (err) {
+            err.classList.remove('active');
+            err.style.display = 'none';
+        }
+        if (loader) loader.style.display = 'none';
+        
+        console.log("🚀 Interface Desbloqueada Visualmente");
     }
 
-    // 2. MODO ONLINE (ADMIN)
-    const params = new URLSearchParams(window.location.search);
-    const token = params.get('t') || localStorage.getItem('lexops_token');
-    
-    // URL da API (Backup)
-    const API_ENDPOINT = "/.netlify/functions/validateToken"; 
+    function runAuthCheck() {
+        // 1. MODO CLIENTE (OFFLINE) - Prioridade Total
+        if (window.__OFFLINE_PAYLOAD__) {
+            console.log("📂 Modo Offline Detectado");
+            window.__ACCESS_GRANTED__ = true;
+            window.isAdmin = false;
+            document.documentElement.classList.add('client-view');
+            unlockVisuals(); // Libera a tela
+            return;
+        }
 
-    if (token && token.length > 5) {
-        // [CORREÇÃO CRÍTICA] Libera acesso IMEDIATAMENTE (Otimista)
-        // Isso impede a tela branca enquanto a API pensa
-        window.__ACCESS_GRANTED__ = true;
-        window.isAdmin = true;
-        localStorage.setItem('lexops_token', token);
-        console.log("🔓 Acesso Liberado (Preliminar)");
+        // 2. MODO ONLINE (ADMIN)
+        const params = new URLSearchParams(window.location.search);
+        const token = params.get('t') || localStorage.getItem('lexops_token');
+        
+        // URL da API (Backup)
+        const API_ENDPOINT = "/.netlify/functions/validateToken"; 
 
-        // Validação de Fundo (Assíncrona - não trava a tela)
-        // Se a API disser que o token é falso, nós bloqueamos DEPOIS.
-        fetch(`${API_ENDPOINT}?token=${token}`)
-            .then(r => r.json())
-            .then(data => {
-                if (!data.valid) {
-                    console.error("❌ Token revogado pela API");
-                    bloquearTudo();
-                }
-            })
-            .catch(() => console.log("⚠️ API Offline - Mantendo acesso local"));
+        if (token && token.length > 5) {
+            // [SUCESSO] Token parece válido
+            window.__ACCESS_GRANTED__ = true;
+            window.isAdmin = true;
+            localStorage.setItem('lexops_token', token);
+            
+            unlockVisuals(); // <--- Libera a tela IMEDIATAMENTE
 
-    } else {
-        // Sem token = Bloqueio Imediato
-        window.__ACCESS_GRANTED__ = false;
-        console.warn("🔒 Token não encontrado");
+            // Validação de Fundo (Opcional - não trava a tela)
+            fetch(`${API_ENDPOINT}?token=${token}`)
+                .then(r => r.json())
+                .then(data => {
+                    if (!data.valid) {
+                        console.error("❌ Token revogado pela API");
+                        bloquearTudo();
+                    }
+                })
+                .catch(() => console.log("⚠️ API Offline - Mantendo acesso local"));
+
+        } else {
+            // [ERRO] Sem token
+            window.__ACCESS_GRANTED__ = false;
+            console.warn("🔒 Token não encontrado");
+            // Se falhar, garante que o erro apareça
+            const err = document.getElementById('accessError');
+            if(err) { err.style.display = 'flex'; err.classList.add('active'); }
+        }
     }
 
     function bloquearTudo() {
@@ -401,6 +421,13 @@
         const e = document.getElementById('accessError');
         if(e) { e.style.display = 'flex'; e.classList.add('active'); }
         alert("Sessão Expirada. Recarregue com um token válido.");
+    }
+
+    // AGUARDA O DOM ESTAR PRONTO (Essencial para não dar erro de 'null')
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', runAuthCheck);
+    } else {
+        runAuthCheck();
     }
 })();
 </script>
