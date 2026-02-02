@@ -462,19 +462,42 @@
 
         <div class="flex-1 overflow-y-auto p-5 pt-2 space-y-8" style="position: relative; z-index: 1001;">
             <section class="space-y-4">
-                <h3 class="text-[10px] font-bold uppercase tracking-widest border-b pb-2 admin-section-title" style="border-color: var(--layout-sidebar-border)"><i class="fas fa-database mr-2"></i> Configuração</h3>
+                <h3 class="text-[10px] font-bold uppercase tracking-widest border-b pb-2 admin-section-title" style="border-color: var(--layout-sidebar-border)"><i class="fas fa-database mr-2"></i> Importação de Dados</h3>
+                
+                <!-- IMPORT BUTTON -->
                 <div class="space-y-2">
-                    <button onclick="document.getElementById('fileInput').click()" class="w-full py-3 rounded-lg text-xs font-bold border flex items-center justify-center gap-2 transition-all group shadow-md admin-button" style="position: relative; z-index: 1002; cursor: pointer;">
-                        <i class="fas fa-file-excel text-emerald-400 text-sm group-hover:scale-110"></i> Importar Base
+                    <button id="btnImportFile" onclick="document.getElementById('fileInput').click()" class="w-full py-3 rounded-lg text-xs font-bold border flex items-center justify-center gap-2 transition-all group shadow-md admin-button" style="position: relative; z-index: 1002; cursor: pointer; background: rgba(34, 197, 94, 0.15); border-color: rgba(34, 197, 94, 0.3);">
+                        <i class="fas fa-file-excel text-emerald-400 text-sm group-hover:scale-110"></i> 
+                        <span>Importar Arquivo XLSX/CSV</span>
                     </button>
                     <input type="file" id="fileInput" accept=".xlsx,.xls,.csv" class="hidden">
+                    <p class="text-[9px] text-slate-400 text-center">Selecione uma planilha com seus dados</p>
                 </div>
-                <div class="grid grid-cols-2 gap-2 pt-1">
-                    <button onclick="document.getElementById('logoClient').click()" class="admin-button text-[10px] py-2.5 rounded border transition-all font-medium"><i class="fas fa-building mr-1"></i> Logo Cliente</button>
-                    <button onclick="document.getElementById('logoOffice').click()" class="admin-button text-[10px] py-2.5 rounded border transition-all font-medium"><i class="fas fa-briefcase mr-1"></i> Logo Escritório</button>
+            </section>
+
+            <section class="space-y-4">
+                <h3 class="text-[10px] font-bold uppercase tracking-widest border-b pb-2 admin-section-title" style="border-color: var(--layout-sidebar-border)"><i class="fas fa-image mr-2"></i> Customização de Logos</h3>
+                
+                <!-- LOGO BUTTONS - CLEAR SEPARATION -->
+                <div class="space-y-2">
+                    <div>
+                        <button id="btnUploadClient" onclick="document.getElementById('logoClient').click()" class="w-full py-2.5 rounded-lg text-xs font-bold border flex items-center justify-center gap-2 transition-all group shadow-sm admin-button" style="background: rgba(59, 130, 246, 0.15); border-color: rgba(59, 130, 246, 0.3);">
+                            <i class="fas fa-building text-blue-400"></i> 
+                            <span>Logo do Cliente</span>
+                        </button>
+                        <input type="file" id="logoClient" accept="image/*" class="hidden">
+                        <p class="text-[9px] text-slate-400 mt-1 text-center">JPG, PNG ou SVG (máx. 5MB)</p>
+                    </div>
+
+                    <div>
+                        <button id="btnUploadOffice" onclick="document.getElementById('logoOffice').click()" class="w-full py-2.5 rounded-lg text-xs font-bold border flex items-center justify-center gap-2 transition-all group shadow-sm admin-button" style="background: rgba(168, 85, 247, 0.15); border-color: rgba(168, 85, 247, 0.3);">
+                            <i class="fas fa-briefcase text-purple-400"></i> 
+                            <span>Logo do Escritório</span>
+                        </button>
+                        <input type="file" id="logoOffice" accept="image/*" class="hidden">
+                        <p class="text-[9px] text-slate-400 mt-1 text-center">JPG, PNG ou SVG (máx. 5MB)</p>
+                    </div>
                 </div>
-                <input type="file" id="logoOffice" accept="image/*" class="hidden">
-                <input type="file" id="logoClient" accept="image/*" class="hidden">
             </section>
 
             <details class="support-materials-section no-export hide-on-print d-print-none" open>
