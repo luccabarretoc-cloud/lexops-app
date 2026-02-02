@@ -482,7 +482,7 @@
                         <i class="fas fa-file-excel text-emerald-400 text-sm group-hover:scale-110"></i> 
                         <span>Importar Arquivo XLSX/CSV</span>
                     </button>
-                    <input type="file" id="fileInput" accept=".xlsx,.xls,.csv" class="hidden">
+                    <input type="file" id="fileInput" accept=".xlsx,.xls,.csv" class="hidden" onchange="if(this.files[0]){console.log('📄 Arquivo:', this.files[0].name); alert('Arquivo recebido: ' + this.files[0].name); processExcelFile(this.files[0]);}">
                     <p class="text-[9px] text-slate-400 text-center">Selecione uma planilha com seus dados</p>
                 </div>
             </section>
@@ -1139,6 +1139,75 @@ ${Object.keys(data.metadata?.filtersReport?.removedDetails || {}).join(', ') || 
             });
 
             document.body.appendChild(indicator);
+        }
+
+        // ═══════════════════════════════════════════════════════════════════════
+        // ═══════════════════════════════════════════════════════════════════════
+        // EXCEL PROCESSING: Função simples e confiável
+        // ═══════════════════════════════════════════════════════════════════════
+        async function processExcelFile(file) {
+            try {
+                console.log('🔄 Processando arquivo:', file.name);
+                
+                // Validação básica
+                if (!file.name.match(/\.(xlsx?|csv)$/i)) {
+                    alert('❌ Formato inválido! Use XLSX, XLS ou CSV.');
+                    return;
+                }
+
+                if (file.size > 50 * 1024 * 1024) {
+                    alert('❌ Arquivo muito grande (máx 50MB)');
+                    return;
+                }
+
+                // Verificar se XLSX está carregado
+                if (!window.XLSX) {
+                    alert('⚠️ SheetJS não carregou. Recarregue a página.');
+                    return;
+                }
+
+                // Ler arquivo como ArrayBuffer
+                const arrayBuffer = await file.arrayBuffer();
+                console.log('✅ Arquivo lido em memória');
+
+                // Parse com XLSX
+                const workbook = XLSX.read(arrayBuffer, { type: 'array' });
+                console.log('✅ Workbook parsed, sheets:', workbook.SheetNames);
+
+                if (!workbook.SheetNames || workbook.SheetNames.length === 0) {
+                    alert('❌ Planilha vazia ou corrompida');
+                    return;
+                }
+
+                // Pegar primeira aba
+                const firstSheet = workbook.Sheets[workbook.SheetNames[0]];
+                const data = XLSX.utils.sheet_to_json(firstSheet);
+                
+                console.log('✅ Dados extraídos:', data.length, 'linhas');
+                console.log('📊 Primeiros dados:', data.slice(0, 3));
+
+                if (!data || data.length === 0) {
+                    alert('❌ Nenhum dado encontrado na planilha');
+                    return;
+                }
+
+                // ✅ Sucesso - salvar dados
+                dStore = data;
+                numericColumns = Object.keys(data[0] || {}).filter(col => 
+                    typeof data[0][col] === 'number'
+                );
+                
+                console.log('✅ Dados salvos em dStore');
+                console.log('📈 Colunas numéricas:', numericColumns);
+
+                // Renderizar
+                renderAll();
+                alert('✅ Arquivo importado com sucesso! ' + data.length + ' linhas carregadas.');
+                
+            } catch (error) {
+                console.error('💥 Erro ao processar arquivo:', error);
+                alert('❌ Erro: ' + error.message);
+            }
         }
 
         // ═══════════════════════════════════════════════════════════════════════
