@@ -52,21 +52,47 @@
             display: flex; 
             align-items: center; 
             justify-content: center;
-            height: 160px; /* Aumentado para ocupar todo o "quadradinho" */
+            height: 160px; 
             width: 100%;
             border-bottom: 1px solid rgba(255,255,255,0.1); 
             margin-bottom: 1rem;
-            padding: 15px; /* Espaço para respirar nas bordas */
+            padding: 15px; 
             background: rgba(0,0,0,0.2) !important;
         }
         
         .lexops-logo-admin img {
-            width: 100% !important; /* Força largura total */
-            height: 100% !important; /* Força altura total */
-            max-width: none !important; /* Remove travas antigas */
-            object-fit: contain; /* Garante que a logo inteira apareça sem cortar */
+            width: 100% !important; 
+            height: 100% !important; 
+            max-width: none !important; 
+            object-fit: contain; 
             pointer-events: none;
             filter: drop-shadow(0 4px 6px rgba(0,0,0,0.3));
+        }
+
+        /* =========================================
+           CORREÇÃO 2: CAMPOS DA BARRA LATERAL (LEITURA)
+           ========================================= */
+        /* Força fundo escuro e texto branco nos inputs da esquerda */
+        #adminPanel select, 
+        #adminPanel input[type="text"], 
+        #adminPanel input[type="number"], 
+        #adminPanel input[type="color"],
+        #adminPanel textarea {
+            background-color: #1e293b !important; /* Fundo Escuro Sólido */
+            color: #ffffff !important; /* Texto Branco */
+            border: 1px solid rgba(255, 255, 255, 0.2) !important;
+        }
+
+        /* CORREÇÃO CRÍTICA: Opções do Dropdown (Fundo Branco, Texto Preto) */
+        /* Isso resolve o problema de não conseguir ler as opções ao clicar */
+        #adminPanel select option {
+            background-color: #ffffff !important;
+            color: #1e293b !important;
+        }
+
+        /* Placeholder mais claro para ler */
+        #adminPanel input::placeholder {
+            color: rgba(255, 255, 255, 0.5) !important;
         }
 
         /* =========================================
@@ -75,7 +101,7 @@
         .logo-resizable-wrapper {
             display: inline-flex; resize: both; overflow: hidden; vertical-align: middle; position: relative;
             border: 1px dashed rgba(0,0,0,0.1); 
-            width: 140px; height: 70px; /* Tamanho Inicial Seguro */
+            width: 140px; height: 70px; 
             min-width: 50px; max-width: 600px; min-height: 30px; max-height: 300px;
         }
         .logo-resizable-wrapper:hover { border-color: rgba(0,0,0,0.4); cursor: nwse-resize; background: rgba(0,0,0,0.02); }
@@ -90,32 +116,16 @@
         #clientLogo, #officeLogo { display: none; }
 
         /* =========================================
-           CORREÇÃO 2: FILTROS LEGÍVEIS (TEXTO ESCURO)
+           FILTROS LEGÍVEIS (TEXTO ESCURO)
            ========================================= */
-        /* Força cor escura em TUDO dentro da barra de filtros do cliente */
-        #clientControls, 
-        #clientControls * {
-            color: #0f172a !important; /* Slate Dark */
+        #clientControls, #clientControls * {
+            color: #0f172a !important; 
             border-color: #cbd5e1;
         }
-        
-        /* Restaura hover específico */
-        #clientControls button:hover {
-            background-color: #f1f5f9 !important;
-        }
-        
-        /* Input de pesquisa */
-        #globalSearch {
-            background: #ffffff !important;
-            color: #0f172a !important;
-            border: 1px solid #cbd5e1 !important;
-        }
-        #globalSearch::placeholder { color: #94a3b8 !important; }
-
-        /* Dropdowns de filtro (Menu Flutuante) */
+        #clientControls button:hover { background-color: #f1f5f9 !important; }
+        #globalSearch { background: #ffffff !important; color: #0f172a !important; border: 1px solid #cbd5e1 !important; }
         .filter-dropdown { background: #ffffff !important; border-color: #e2e8f0 !important; }
         .filter-dropdown label { color: #334155 !important; }
-        .filter-dropdown label:hover { background-color: #f8fafc !important; }
 
         /* ========================================= */
 
