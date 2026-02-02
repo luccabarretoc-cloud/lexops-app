@@ -407,6 +407,18 @@
                 if (protectedEl) protectedEl.style.display = 'none';
             };
 
+            // ✅ BYPASS: Permitir acesso local/desenvolvimento sem token
+            const isLocalDevelopment = window.location.protocol === 'file:' || 
+                                       window.location.hostname === 'localhost' ||
+                                       window.location.hostname === '127.0.0.1';
+            
+            if (isLocalDevelopment) {
+                if (errorEl) errorEl.classList.remove('active');
+                if (protectedEl) protectedEl.style.display = 'flex';
+                window.__ACCESS_GRANTED__ = true;
+                return;
+            }
+
             if (!token) {
                 showError('Acesso Negado');
                 return;
