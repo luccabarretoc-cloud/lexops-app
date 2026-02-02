@@ -260,48 +260,8 @@
             border: none !important;
             object-fit: contain !important;
             max-height: 50px !important;
-            width: auto !important;
             margin: 0 15px !important;
             padding: 0 !important;
-            display: block !important;
-            opacity: 1 !important;
-            filter: none !important;
-            transition: transform 0.3s ease !important;
-        }
-
-        #imgClient:hover, #imgOffice:hover {
-            transform: scale(1.05) !important;
-        }
-
-        /* Logo Placeholder - Elegant styling */
-        .logo-placeholder {
-            background: transparent !important;
-            border: none !important;
-            box-shadow: none !important;
-            padding: 0 !important;
-            margin: 0 15px !important;
-            color: #9ca3af !important;
-            font-size: 0.75rem !important;
-            cursor: pointer !important;
-            transition: all 0.3s ease !important;
-        }
-
-        .logo-placeholder:hover {
-            color: var(--primary-accent, #4f46e5) !important;
-        }
-
-        /* Header Section - Transparent, no borders */
-        .header-section {
-            border: none !important;
-            box-shadow: none !important;
-            background: transparent !important;
-        }
-
-        /* ═══ LOGO CONTAINER - Responsive & Centered ═══ */
-        .header-left, .header-right {
-            gap: 0.5rem !important;
-            padding: 0.5rem !important;
-            margin: 0 !important;
         }
 
         /* Garante que as opções do menu dropdown sejam sempre legíveis */
@@ -407,18 +367,6 @@
                 if (protectedEl) protectedEl.style.display = 'none';
             };
 
-            // ✅ BYPASS: Permitir acesso local/desenvolvimento sem token
-            const isLocalDevelopment = window.location.protocol === 'file:' || 
-                                       window.location.hostname === 'localhost' ||
-                                       window.location.hostname === '127.0.0.1';
-            
-            if (isLocalDevelopment) {
-                if (errorEl) errorEl.classList.remove('active');
-                if (protectedEl) protectedEl.style.display = 'flex';
-                window.__ACCESS_GRANTED__ = true;
-                return;
-            }
-
             if (!token) {
                 showError('Acesso Negado');
                 return;
@@ -474,42 +422,19 @@
 
         <div class="flex-1 overflow-y-auto p-5 pt-2 space-y-8" style="position: relative; z-index: 1001;">
             <section class="space-y-4">
-                <h3 class="text-[10px] font-bold uppercase tracking-widest border-b pb-2 admin-section-title" style="border-color: var(--layout-sidebar-border)"><i class="fas fa-database mr-2"></i> Importação de Dados</h3>
-                
-                <!-- IMPORT BUTTON -->
+                <h3 class="text-[10px] font-bold uppercase tracking-widest border-b pb-2 admin-section-title" style="border-color: var(--layout-sidebar-border)"><i class="fas fa-database mr-2"></i> Configuração</h3>
                 <div class="space-y-2">
-                    <button id="btnImportFile" onclick="console.log('🖱️ CLICK: btnImportFile'); const input = document.getElementById('fileInput'); console.log('Input encontrado:', input); if(input) input.click();" class="w-full py-3 rounded-lg text-xs font-bold border flex items-center justify-center gap-2 transition-all group shadow-md admin-button" style="position: relative; z-index: 1002; cursor: pointer; background: rgba(34, 197, 94, 0.15); border-color: rgba(34, 197, 94, 0.3);">
-                        <i class="fas fa-file-excel text-emerald-400 text-sm group-hover:scale-110"></i> 
-                        <span>Importar Arquivo XLSX/CSV</span>
+                    <button onclick="document.getElementById('fileInput').click()" class="w-full py-3 rounded-lg text-xs font-bold border flex items-center justify-center gap-2 transition-all group shadow-md admin-button" style="position: relative; z-index: 1002; cursor: pointer;">
+                        <i class="fas fa-file-excel text-emerald-400 text-sm group-hover:scale-110"></i> Importar Base
                     </button>
                     <input type="file" id="fileInput" accept=".xlsx,.xls,.csv" class="hidden">
-                    <p class="text-[9px] text-slate-400 text-center">Selecione uma planilha com seus dados</p>
                 </div>
-            </section>
-
-            <section class="space-y-4">
-                <h3 class="text-[10px] font-bold uppercase tracking-widest border-b pb-2 admin-section-title" style="border-color: var(--layout-sidebar-border)"><i class="fas fa-image mr-2"></i> Customização de Logos</h3>
-                
-                <!-- LOGO BUTTONS - CLEAR SEPARATION -->
-                <div class="space-y-2">
-                    <div>
-                        <button id="btnUploadClient" onclick="document.getElementById('logoClient').click()" class="w-full py-2.5 rounded-lg text-xs font-bold border flex items-center justify-center gap-2 transition-all group shadow-sm admin-button" style="background: rgba(59, 130, 246, 0.15); border-color: rgba(59, 130, 246, 0.3);">
-                            <i class="fas fa-building text-blue-400"></i> 
-                            <span>Logo do Cliente</span>
-                        </button>
-                        <input type="file" id="logoClient" accept="image/*" class="hidden">
-                        <p class="text-[9px] text-slate-400 mt-1 text-center">JPG, PNG ou SVG (máx. 5MB)</p>
-                    </div>
-
-                    <div>
-                        <button id="btnUploadOffice" onclick="document.getElementById('logoOffice').click()" class="w-full py-2.5 rounded-lg text-xs font-bold border flex items-center justify-center gap-2 transition-all group shadow-sm admin-button" style="background: rgba(168, 85, 247, 0.15); border-color: rgba(168, 85, 247, 0.3);">
-                            <i class="fas fa-briefcase text-purple-400"></i> 
-                            <span>Logo do Escritório</span>
-                        </button>
-                        <input type="file" id="logoOffice" accept="image/*" class="hidden">
-                        <p class="text-[9px] text-slate-400 mt-1 text-center">JPG, PNG ou SVG (máx. 5MB)</p>
-                    </div>
+                <div class="grid grid-cols-2 gap-2 pt-1">
+                    <button onclick="document.getElementById('logoClient').click()" class="admin-button text-[10px] py-2.5 rounded border transition-all font-medium"><i class="fas fa-building mr-1"></i> Logo Cliente</button>
+                    <button onclick="document.getElementById('logoOffice').click()" class="admin-button text-[10px] py-2.5 rounded border transition-all font-medium"><i class="fas fa-briefcase mr-1"></i> Logo Escritório</button>
                 </div>
+                <input type="file" id="logoOffice" accept="image/*" class="hidden">
+                <input type="file" id="logoClient" accept="image/*" class="hidden">
             </section>
 
             <details class="support-materials-section no-export hide-on-print d-print-none" open>
@@ -958,203 +883,6 @@
         };
 
         // ═══════════════════════════════════════════════════════════════════════
-        // DATA HYDRATION: Offline-First Filter Capture & Injection
-        // ═══════════════════════════════════════════════════════════════════════
-
-        const EXPORT_FILTERS_CONFIG = {
-            allowedCategories: ['data'],
-            restrictedCategories: ['comparison', 'visual', 'ui'],
-            alwaysRestricted: ['token', 'apiKey', 'userId', 'sessionId', 'authToken'],
-            mode: 'category-based'
-        };
-
-        function getFilterCategory(filterName, filterElement) {
-            // MÉTODO 1: Detectar pela seção HTML
-            if (filterElement) {
-                const parentSection = filterElement.closest('[data-filter-category]');
-                if (parentSection) {
-                    return parentSection.getAttribute('data-filter-category');
-                }
-                const parentDiv = filterElement.closest('div[class*="filter"]');
-                if (parentDiv) {
-                    if (parentDiv.classList.contains('data-filters')) return 'data';
-                    if (parentDiv.classList.contains('comparison-filters')) return 'comparison';
-                    if (parentDiv.classList.contains('visual-filters')) return 'visual';
-                }
-            }
-
-            // MÉTODO 2: Lista manual
-            const categoryMap = {
-                'filial': 'data', 'periodo': 'data', 'status': 'data', 'tipo': 'data',
-                'risco': 'data', 'valor_min': 'data', 'valor_max': 'data',
-                'comarca': 'data', 'vara': 'data',
-                'comparacao_periodo': 'comparison', 'comparacao_filial': 'comparison', 'baseline': 'comparison',
-                'cor_grafico': 'visual', 'tipo_grafico': 'visual', 'zoom': 'visual'
-            };
-
-            return categoryMap[filterName] || 'unknown';
-        }
-
-        function captureOfflineState() {
-            const allFilters = window.ACTIVE_FILTERS || {};
-            const dataFiltersOnly = {};
-            const removedFilters = {};
-
-            for (const [filterName, filterValue] of Object.entries(allFilters)) {
-                const filterElement = document.getElementById(filterName) || 
-                                      document.querySelector(`[name="${filterName}"]`);
-                const category = getFilterCategory(filterName, filterElement);
-
-                if (category === 'data') {
-                    dataFiltersOnly[filterName] = filterValue;
-                    console.log(`✅ [EXPORTAR] ${filterName} = ${JSON.stringify(filterValue)}`);
-                } else if (EXPORT_FILTERS_CONFIG.alwaysRestricted.includes(filterName)) {
-                    removedFilters[filterName] = 'security';
-                    console.warn(`🔒 [BLOQUEADO] ${filterName} (SEGURANÇA)`);
-                } else {
-                    removedFilters[filterName] = category;
-                    console.log(`🚫 [REMOVIDO] ${filterName} (categoria: ${category})`);
-                }
-            }
-
-            const offlineData = {
-                rows: window.DATA_ROWS || dStore || [],
-                filters: dataFiltersOnly,
-                summary: {
-                    volumeTotal: document.querySelector('#kTotal')?.textContent || '0',
-                    exposicaoTotal: document.querySelector('#kTotalVal')?.textContent || 'R$ 0',
-                    riscoProvavel: document.querySelector('#kRiskProv')?.textContent || 'R$ 0',
-                    ticketMedio: document.querySelector('#kAvg')?.textContent || 'R$ 0',
-                },
-                metadata: {
-                    capturedAt: new Date().toISOString(),
-                    version: '1.0',
-                    exportConfig: EXPORT_FILTERS_CONFIG,
-                    filtersReport: {
-                        total: Object.keys(allFilters).length,
-                        exported: Object.keys(dataFiltersOnly).length,
-                        removed: Object.keys(removedFilters).length,
-                        removedDetails: removedFilters
-                    }
-                }
-            };
-
-            console.group('📋 CAPTURA DE ESTADO');
-            console.table({
-                'Total': Object.keys(allFilters).length,
-                'Exportados (Dados)': Object.keys(dataFiltersOnly).length,
-                'Removidos': Object.keys(removedFilters).length
-            });
-            console.log('✅ Exportados:', Object.keys(dataFiltersOnly));
-            console.log('🚫 Removidos:', removedFilters);
-            console.groupEnd();
-
-            return offlineData;
-        }
-
-        function loadOfflineData(offlineData) {
-            window.DATA_ROWS = offlineData.rows || [];
-            window.ACTIVE_FILTERS = offlineData.filters || {};
-            dStore = offlineData.rows || [];
-
-            // Renderizar dashboard com dados
-            if (typeof renderDashboard === 'function') {
-                renderDashboard(window.DATA_ROWS);
-            }
-            if (typeof updateMetrics === 'function') {
-                updateMetrics(offlineData.summary);
-            }
-
-            enableFilteringAndSorting();
-
-            if (Object.keys(window.ACTIVE_FILTERS).length > 0) {
-                if (typeof applyFilters === 'function') {
-                    applyFilters(window.ACTIVE_FILTERS);
-                }
-                console.log('✅ Filtros pré-configurados aplicados');
-            }
-        }
-
-        function enableFilteringAndSorting() {
-            // Garantir que filtros estão habilitados
-            const clientControls = document.getElementById('clientControls');
-            if (clientControls) {
-                clientControls.classList.remove('hidden');
-                clientControls.style.display = 'flex';
-            }
-            const globalSearch = document.getElementById('globalSearch');
-            if (globalSearch) {
-                globalSearch.disabled = false;
-            }
-            console.log('✅ Filtragem e ordenação habilitadas');
-        }
-
-        function showOfflineIndicator() {
-            const indicator = document.createElement('div');
-            indicator.id = 'offline-indicator';
-            indicator.style.cssText = `
-                position: fixed;
-                top: 0;
-                right: 0;
-                background: #ff6b6b;
-                color: white;
-                padding: 12px 20px;
-                font-size: 12px;
-                font-weight: bold;
-                border-radius: 0 0 0 8px;
-                z-index: 9999;
-                cursor: pointer;
-                font-family: Inter, sans-serif;
-            `;
-
-            const numFiltros = Object.keys(window.OFFLINE_DATA?.filters || {}).length;
-            const filtrosArray = Object.keys(window.OFFLINE_DATA?.filters || {});
-            const filtrosText = numFiltros > 0 
-                ? filtrosArray.join(', ')
-                : 'Use os filtros abaixo';
-
-            indicator.innerHTML = `
-                🔴 MODO OFFLINE<br>
-                <small>Filtros: ${filtrosText}</small>
-            `;
-
-            indicator.addEventListener('click', () => {
-                const data = window.OFFLINE_DATA;
-                const numFiltrosAtivos = Object.keys(data?.filters || {}).length;
-
-                alert(`
-MODO OFFLINE - DASHBOARD INTERATIVO
-
-${numFiltrosAtivos > 0 ? '📊 Filtros Ativos:' : '💡 Nenhum filtro ativo'}
-${numFiltrosAtivos > 0 ? Object.keys(data.filters).join(', ') : 'Você pode aplicar filtros agora!'}
-
-🚫 Filtros Removidos (não disponíveis):
-${Object.keys(data.metadata?.filtersReport?.removedDetails || {}).join(', ') || 'nenhum'}
-
-📅 Capturado em: ${new Date(data.metadata?.capturedAt).toLocaleString('pt-BR')}
-
-💡 Este dashboard é totalmente funcional offline.
-   Aplique filtros, ordene dados e analise durante suas reuniões!
-                `);
-            });
-
-            document.body.appendChild(indicator);
-        }
-
-        // ═══════════════════════════════════════════════════════════════════════
-        // ═══════════════════════════════════════════════════════════════════════
-        // UTILITY: setLoadingState - Simples e Funcional
-        // ═══════════════════════════════════════════════════════════════════════
-        function setLoadingState(isLoading) {
-            // Função simples que só precisa existir
-            if (isLoading) {
-                console.log('⏳ Carregando...');
-            } else {
-                console.log('✅ Carregamento concluído');
-            }
-        }
-
-        // ═══════════════════════════════════════════════════════════════════════
         // HYDRATED STATE BOOT ARCHITECTURE
         // Offline-First SPA: Detects Admin Mode vs Client Mode
         // ═══════════════════════════════════════════════════════════════════════
@@ -1177,29 +905,9 @@ ${Object.keys(data.metadata?.filtersReport?.removedDetails || {}).join(', ') || 
                 try {
                     BOOT_STATE.isDOMReady = true;
 
-                    // DEBUG: Mostrar status de boot
-                    console.log('🚀 bootApplication() INICIADO');
-                    console.log('   - window.__OFFLINE_PAYLOAD__:', !!window.__OFFLINE_PAYLOAD__);
-                    console.log('   - window.IS_OFFLINE_MODE:', !!window.IS_OFFLINE_MODE);
-                    console.log('   - window.OFFLINE_DATA:', !!window.OFFLINE_DATA);
-
-                    // ⚡ PRIMEIRA VERIFICAÇÃO: Tem dados offline?
-                    if (window.IS_OFFLINE_MODE && window.OFFLINE_DATA) {
-                        console.log('🔴 MODO OFFLINE detectado (data hydration)');
-                        window.API_ENABLED = false;
-                        loadOfflineData(window.OFFLINE_DATA);
-                        showOfflineIndicator();
-                        bootClientMode();
-                        return;
-                    }
-
-                    // ⚡ SEGUNDA VERIFICAÇÃO: Tem payload offline mas sem IS_OFFLINE_MODE?
-                    if (BOOT_STATE.isOfflineMode && window.__OFFLINE_PAYLOAD__) {
-                        console.log('📦 Modo Cliente (Payload Offline)');
+                    if (BOOT_STATE.isOfflineMode) {
                         bootClientMode();
                     } else {
-                        // ✅ MODO ADMIN: Interface de edição/upload
-                        console.log('⚙️ MODO ADMIN: Inicializando interface de administração');
                         bootAdminMode();
                     }
                 } catch (error) {
@@ -1255,38 +963,17 @@ ${Object.keys(data.metadata?.filtersReport?.removedDetails || {}).join(', ') || 
             // ═══════════════════════════════════════════════════════════════════════
             function bootAdminMode() {
                 try {
-                    console.log('🔧 bootAdminMode(): Iniciando registro de event listeners...');
-                    
-                    // ✅ INDICADOR VISUAL: Modo Admin Ativo
-                    const indicator = document.createElement('div');
-                    indicator.id = 'admin-mode-indicator';
-                    indicator.style.cssText = `
-                        position: fixed;
-                        top: 0;
-                        left: 0;
-                        background: #10b981;
-                        color: white;
-                        padding: 8px 16px;
-                        font-size: 11px;
-                        font-weight: bold;
-                        border-radius: 0 0 8px 0;
-                        z-index: 9999;
-                        font-family: Inter, sans-serif;
-                    `;
-                    indicator.textContent = '⚙️ MODO ADMIN ATIVO';
-                    document.body.appendChild(indicator);
-                    
+                    if (!window.XLSX) {
+                        throw new Error('SheetJS not loaded');
+                    }
+
                     initializeExcelUpload();
-                    console.log('✅ initializeExcelUpload() executado');
                     initializeLogoUploads();
-                    console.log('✅ initializeLogoUploads() executado');
                     initializeWhiteLabelControls();
-                    console.log('✅ initializeWhiteLabelControls() executado');
                     applyVisualEnhancements();
-                    console.log('✅ applyVisualEnhancements() executado');
-                    console.log('🎉 MODO ADMIN PRONTO: Todos os event listeners registrados!');
+
                 } catch (error) {
-                    console.error('💥 Admin mode boot failed:', error);
+                    console.error('Admin mode boot failed:', error);
                     alert('Erro ao inicializar o sistema.');
                 }
             }
@@ -1295,29 +982,16 @@ ${Object.keys(data.metadata?.filtersReport?.removedDetails || {}).join(', ') || 
             // EXCEL UPLOAD: Robust SheetJS Integration
             // ═══════════════════════════════════════════════════════════════════════
             function initializeExcelUpload() {
-                console.log('📂 initializeExcelUpload(): Procurando elemento fileInput...');
                 const fileInput = document.getElementById('fileInput');
-                if (!fileInput) {
-                    console.error('❌ ERRO: Elemento #fileInput não encontrado no DOM!');
-                    return;
-                }
-                console.log('✅ Elemento #fileInput encontrado:', fileInput);
+                if (!fileInput) return;
 
                 fileInput.addEventListener('change', async (event) => {
-                    console.log('🔥 EVENT LISTENER DISPARADO: fileInput.change');
                     const file = event.target?.files?.[0];
-                    if (!file) {
-                        console.warn('⚠️ Nenhum arquivo selecionado');
-                        return;
-                    }
-                    console.log('📄 Arquivo selecionado:', file.name, file.size, 'bytes');
+                    if (!file) return;
 
                     setLoadingState(true);
 
                     try {
-                        if (!window.XLSX) {
-                            throw new Error('SheetJS não carregado. Verifique a conexão e recarregue a página.');
-                        }
                         // Validation
                         if (!file.name.match(/\.(xlsx?|csv)$/i)) {
                             throw new Error('Formato inválido. Use XLSX, XLS ou CSV.');
@@ -1419,9 +1093,9 @@ ${Object.keys(data.metadata?.filtersReport?.removedDetails || {}).join(', ') || 
             function initializeWhiteLabelControls() {
                 // Color inputs (instant feedback via RAF)
                 const colorControls = [
-                    { id: 'accentColorInput', handler: updateAccentColor },
+                    { id: 'accentColorInput', varName: '--primary-accent' },
                     { id: 'headerBgInput', handler: updateHeaderBg },
-                    { id: 'headerTextInput', handler: updateHeaderText }
+                    { id: 'headerTextInput', varName: '--header-text' }
                 ];
 
                 colorControls.forEach(({ id, varName, handler }) => {
@@ -1511,9 +1185,6 @@ ${Object.keys(data.metadata?.filtersReport?.removedDetails || {}).join(', ') || 
                 return;
             }
 
-            // ⚡ FASE 1: CAPTURAR ESTADO (com filtros)
-            const offlineData = captureOfflineState();
-
             const clone = document.documentElement.cloneNode(true);
             const body = clone.querySelector('body');
 
@@ -1530,19 +1201,9 @@ ${Object.keys(data.metadata?.filtersReport?.removedDetails || {}).join(', ') || 
             // CRITICAL: KEEP #clientControls (filter bar)
             // Do NOT remove it
 
-            // ⚡ FASE 2: INJETAR NO HTML (Hydration Scripts)
+            // Step 3: State Injection (Hydration)
             const offlinePayloadScript = document.createElement('script');
             offlinePayloadScript.textContent = `
-                window.IS_OFFLINE_MODE = true;
-                window.OFFLINE_DATA = ${JSON.stringify(offlineData)};
-                window.EXPORT_FILTERS_CONFIG = ${JSON.stringify(EXPORT_FILTERS_CONFIG)};
-
-                console.group('✅ MODO OFFLINE ATIVADO');
-                console.log('📊 Filtros de Dados disponíveis:', Object.keys(window.OFFLINE_DATA.filters));
-                console.log('🚫 Filtros removidos:', window.OFFLINE_DATA.metadata.filtersReport.removedDetails);
-                console.log('💡 Filtros podem ser aplicados AGORA no dashboard offline');
-                console.groupEnd();
-
                 window.__OFFLINE_PAYLOAD__ = {
                     dStore: ${JSON.stringify(dStore)},
                     customCharts: ${JSON.stringify(customCharts)},
@@ -1632,27 +1293,44 @@ ${Object.keys(data.metadata?.filtersReport?.removedDetails || {}).join(', ') || 
             a.click();
 
             setTimeout(() => URL.revokeObjectURL(a.href), 100);
-
-            // ⚡ FEEDBACK AO USUÁRIO
-            const report = offlineData.metadata.filtersReport;
-            const filtrosAtivos = Object.keys(offlineData.filters);
-
-            alert(`
-✅ DASHBOARD EXPORTADO COM SUCESSO!
-
-📊 FILTROS DE DADOS ${filtrosAtivos.length > 0 ? 'ATIVOS' : '(nenhum ativo)'}:
-   ${filtrosAtivos.length > 0 ? filtrosAtivos.join(', ') : 'Você pode aplicar filtros no HTML exportado'}
-
-🚫 FILTROS REMOVIDOS: ${report.removed}
-   ${Object.keys(report.removedDetails).length > 0 ? 
-     Object.keys(report.removedDetails).map(k => 
-       k + ' (' + report.removedDetails[k] + ')'
-     ).join(', ') : 'nenhum'}
-
-💡 O dashboard é totalmente interativo offline!
-   Você pode filtrar, ordenar e analisar dados durante reuniões.
-            `);
         }
+                    try {
+                        const rawJson = JSON.parse(dataIsland.textContent);
+                        window.dStore = JSON.parse(b64DecodeUnicode(rawJson.dStore));
+                        window.customCharts = JSON.parse(b64DecodeUnicode(rawJson.customCharts));
+                        window.themeConfig = JSON.parse(b64DecodeUnicode(rawJson.themeConfig));
+                        window.colMapping = JSON.parse(b64DecodeUnicode(rawJson.colMapping));
+                        window.logoData = JSON.parse(b64DecodeUnicode(rawJson.logoData));
+                        
+                        if(rawJson.layoutTheme) window.layoutTheme = rawJson.layoutTheme;
+                        if(rawJson.numericColumns) window.numericColumns = rawJson.numericColumns;
+                        if(rawJson.mappedValueColumn) window.mappedValueColumn = rawJson.mappedValueColumn;
+                        
+                        document.body.classList.add('client-mode');
+                        const adminPanel = document.getElementById('adminPanel');
+                        if(adminPanel) adminPanel.remove();
+                        
+                        document.getElementById('dataTable').innerHTML = '';
+                        document.getElementById('chartsGrid').innerHTML = '';
+                        
+                        applyTheme(); 
+                        applyLayoutTheme();
+                        applyLogos();
+                        applyLexOpsLogo();
+                        
+                        document.getElementById('emptyState').classList.add('hidden');
+                        document.getElementById('dashContent').classList.remove('hidden');
+                        
+                        populateChartBuilder();
+                        initFiltersUI(); 
+                        renderAll(); 
+                    } catch (err) {
+                        alert("Erro crítico nos dados.");
+                        console.error(err);
+                    }
+                }
+            }, 300);
+        };
 
         function applyLexOpsLogo() {
             const img = document.getElementById('lexopsLogoImg');
@@ -1679,6 +1357,22 @@ ${Object.keys(data.metadata?.filtersReport?.removedDetails || {}).join(', ') || 
                 }
             });
         }
+
+        ['logoOffice', 'logoClient', 'lexopsMainLogo'].forEach(id => {
+            const el = document.getElementById(id);
+            if(el) {
+                el.addEventListener('change', e => {
+                    const r = new FileReader();
+                    r.onload = ev => { 
+                        if(id.includes('Office')) logoData.office = ev.target.result; 
+                        else if(id.includes('Client')) logoData.client = ev.target.result;
+                        else if(id.includes('Main')) logoData.lexops = ev.target.result;
+                        applyLogos(); 
+                    };
+                    if(e.target.files[0]) r.readAsDataURL(e.target.files[0]);
+                });
+            }
+        });
 
         // ═══════════════════════════════════════════════════════════════════════
         // LOGO APPLICATION (Memory-Safe with RAF)
@@ -2134,23 +1828,6 @@ ${Object.keys(data.metadata?.filtersReport?.removedDetails || {}).join(', ') || 
         // ═══════════════════════════════════════════════════════════════════════
         function updateAccentColor(color) {
             updateCSSVar('--primary-accent', color);
-            document.documentElement.style.setProperty('--brand-500', color);
-            try {
-                document.documentElement.style.setProperty('--brand-600', chroma(color).darken().hex());
-            } catch (e) {
-                document.documentElement.style.setProperty('--brand-600', color);
-            }
-            if (window.themeConfig) {
-                themeConfig.paletteName = 'custom';
-                themeConfig.brand = color;
-                try {
-                    themeConfig.palette = chroma.scale([color, '#cbd5e1']).colors(5);
-                } catch (e) {
-                    themeConfig.palette = [color];
-                }
-                applyTheme();
-                renderAll();
-            }
         }
 
         function updatePanelTitle(text) {
@@ -2632,137 +2309,6 @@ ${Object.keys(data.metadata?.filtersReport?.removedDetails || {}).join(', ') || 
         
         function closeDetail() { document.getElementById('detailModal').classList.replace('flex','hidden'); }
 
-    <script>
-        // ═══════════════════════════════════════════════════════════════════════
-        // TESTE AUTOMATIZADO - Validação de Implementação
-        // ═══════════════════════════════════════════════════════════════════════
-        
-        function testOfflineFirstImplementation() {
-            console.group('🧪 TESTE AUTOMATIZADO - OFFLINE-FIRST HYDRATION');
-
-            let passed = 0;
-            let failed = 0;
-
-            // TESTE 1: Funções Implementadas
-            console.log('--- TESTE 1: Verificação de Funções ---');
-            const requiredFunctions = [
-                'captureOfflineState',
-                'getFilterCategory',
-                'loadOfflineData',
-                'enableFilteringAndSorting',
-                'showOfflineIndicator'
-            ];
-
-            requiredFunctions.forEach(fn => {
-                if (typeof window[fn] === 'function') {
-                    console.log(`✅ ${fn} implementada`);
-                    passed++;
-                } else {
-                    console.error(`❌ ${fn} NÃO encontrada`);
-                    failed++;
-                }
-            });
-
-            // TESTE 2: Config de Filtros
-            console.log('--- TESTE 2: Verificação de EXPORT_FILTERS_CONFIG ---');
-            if (window.EXPORT_FILTERS_CONFIG && window.EXPORT_FILTERS_CONFIG.mode === 'category-based') {
-                console.log('✅ EXPORT_FILTERS_CONFIG configurada corretamente');
-                passed++;
-            } else {
-                console.error('❌ EXPORT_FILTERS_CONFIG não configurada');
-                failed++;
-            }
-
-            // TESTE 3: getFilterCategory com filtros de dados
-            console.log('--- TESTE 3: Categorização de Filtros ---');
-            const testFilters = {
-                'filial': 'Curitiba',
-                'periodo': '2025',
-                'comparacao_periodo': '2024',
-                'token': 'abc123',
-                'cor_grafico': 'azul'
-            };
-
-            window.ACTIVE_FILTERS = testFilters;
-            const captured = captureOfflineState();
-
-            if (Object.keys(captured.filters).includes('filial') && 
-                Object.keys(captured.filters).includes('periodo') &&
-                !Object.keys(captured.filters).includes('comparacao_periodo') &&
-                !Object.keys(captured.filters).includes('token')) {
-                console.log('✅ Categorização de filtros correta');
-                passed++;
-            } else {
-                console.error('❌ Filtros não categorizados corretamente');
-                failed++;
-            }
-
-            // TESTE 4: Relatório de Filtros
-            console.log('--- TESTE 4: Relatório de Filtros ---');
-            const report = captured.metadata.filtersReport;
-            console.log(`✅ Total de filtros: ${report.total}`);
-            console.log(`✅ Exportados (dados): ${report.exported}`);
-            console.log(`✅ Removidos: ${report.removed}`);
-            console.log(`✅ Detalhes removidos:`, report.removedDetails);
-            passed++;
-
-            // TESTE 5: loadOfflineData executa sem erro
-            console.log('--- TESTE 5: Carregamento de Dados Offline ---');
-            try {
-                const testData = {
-                    rows: [{id: 1, processo: '123'}, {id: 2, processo: '456'}],
-                    filters: {filial: 'SP'},
-                    summary: {},
-                    metadata: {capturedAt: new Date().toISOString()}
-                };
-                // Não executamos loadOfflineData pois alteraria o DOM
-                // Apenas validamos que a função existe e é callable
-                console.log('✅ loadOfflineData pronta para uso');
-                passed++;
-            } catch (e) {
-                console.error('❌ Erro ao validar loadOfflineData:', e.message);
-                failed++;
-            }
-
-            // TESTE 6: CSS dos Logos
-            console.log('--- TESTE 6: Estilos Premium dos Logos ---');
-            const style = window.getComputedStyle(document.documentElement);
-            console.log('✅ Logos devem ter:');
-            console.log('   - background: transparent');
-            console.log('   - border: none');
-            console.log('   - object-fit: contain');
-            console.log('   - max-height: 50px');
-            console.log('   - margin: 0 15px');
-            passed++;
-
-            // TESTE 7: bootApplication incluida hydration
-            console.log('--- TESTE 7: Verificação de bootApplication ---');
-            if (window.IS_OFFLINE_MODE || !window.OFFLINE_DATA) {
-                console.log('✅ bootApplication preparada para detectar modo offline');
-                passed++;
-            }
-
-            // RESUMO
-            console.group('📋 RESUMO FINAL');
-            console.log(`✅ Testes Passados: ${passed}`);
-            console.log(`❌ Testes Falhados: ${failed}`);
-            console.log(`📊 Taxa de Sucesso: ${((passed / (passed + failed)) * 100).toFixed(1)}%`);
-            if (failed === 0) {
-                console.log('🎉 TODOS OS TESTES PASSARAM!');
-            } else {
-                console.warn('⚠️ Alguns testes falharam. Verifique acima.');
-            }
-            console.groupEnd();
-            console.groupEnd();
-        }
-
-        // Executar testes quando o documento estiver pronto
-        if (document.readyState === 'loading') {
-            document.addEventListener('DOMContentLoaded', testOfflineFirstImplementation);
-        } else {
-            // Defer to ensure functions are loaded
-            setTimeout(testOfflineFirstImplementation, 100);
-        }
     </script>
 
     </div>
