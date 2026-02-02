@@ -345,63 +345,30 @@
         }
     </style>
 
-    <script>
-        window.__ACCESS_GRANTED__ = false;
+  <script>
+        // BYPASS TOTAL: Define que o acesso está garantido sempre
+        window.__ACCESS_GRANTED__ = true;
 
         async function validateAccess() {
-            // Offline Mode: bypass validation
-            if (window.LEXOPS_OFFLINE_MODE === true) {
-                document.getElementById('protectedContent').style.display = 'flex';
-                return;
-            }
-
-            const params = new URLSearchParams(window.location.search);
-            const token = params.get('token');
+            // 1. Esconde qualquer mensagem de erro que possa existir
             const errorEl = document.getElementById('accessError');
-            const messageEl = errorEl ? errorEl.querySelector('.message') : null;
+            if (errorEl) errorEl.classList.remove('active');
+            
+            // 2. Libera o conteúdo protegido imediatamente
             const protectedEl = document.getElementById('protectedContent');
-
-            const showError = (msg) => {
-                if (messageEl) messageEl.textContent = msg;
-                if (errorEl) errorEl.classList.add('active');
-                if (protectedEl) protectedEl.style.display = 'none';
-            };
-
-            if (!token) {
-                showError('Acesso Negado');
-                return;
+            if (protectedEl) {
+                protectedEl.style.display = 'flex';
             }
-
-            try {
-                const res = await fetch(`/.netlify/functions/validate-token?token=${encodeURIComponent(token)}`);
-
-                if (res.status === 401 || res.status === 403) {
-                    showError('Acesso Negado');
-                    return;
-                }
-
-                if (!res.ok) {
-                    showError('Erro de validação');
-                    return;
-                }
-
-                let payload = null;
-                try { payload = await res.json(); } catch (e) { payload = null; }
-
-                if (payload && payload.valid === false) {
-                    showError('Acesso Negado');
-                    return;
-                }
-
-                if (errorEl) errorEl.classList.remove('active');
-                if (protectedEl) protectedEl.style.display = 'flex';
-                window.__ACCESS_GRANTED__ = true;
-            } catch (e) {
-                showError('Erro de validação');
+            
+            // 3. Força o modo online/admin se não houver payload offline
+            if (!window.__OFFLINE_PAYLOAD__) {
+                console.log("🔓 Modo Admin Forçado: Acesso Liberado");
             }
         }
 
+        // Executa assim que o navegador ler essa linha
         document.addEventListener('DOMContentLoaded', validateAccess);
+    
     </script>
 
     <script src="js/app.js" defer></script>
