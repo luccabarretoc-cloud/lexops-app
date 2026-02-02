@@ -253,77 +253,86 @@
             transform: scale(2.7);
         }
 
-        /* ═══ PREMIUM LOGO STYLING ═══ */
+   /* ═══ PREMIUM LOGO STYLING ═══ */
         
-        /* 1. LOGO LEXOPS (SIDEBAR) - Tamanho Fixo e Aumentado */
+        /* 1. LOGO LEXOPS (SIDEBAR) - Fixa e Grande */
         .lexops-logo-admin {
             display: flex;
             align-items: center;
             justify-content: center;
-            height: 90px; /* Área aumentada */
+            height: 100px; /* Área generosa */
             background: transparent !important;
-            margin: 0;
-            padding: 0.5rem;
-            border: none !important;
+            margin-bottom: 1rem;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
         }
 
         .lexops-logo-admin img {
+            height: 85px !important; /* Altura fixa grande */
+            width: auto !important;
             max-width: 100%;
-            height: 75px !important; /* TAMANHO FIXO GRANDE (Sua foto) */
-            width: auto;
             object-fit: contain;
-            transition: transform 0.3s ease;
+            filter: drop-shadow(0 2px 4px rgba(0,0,0,0.3));
+            pointer-events: none;
+            transform: none !important; /* Remove hacks antigos de scale */
         }
-        .lexops-logo-admin img:hover { transform: scale(1.05); }
 
-        /* 2. SISTEMA DE ARRASTAR PARA REDIMENSIONAR (CLIENTE/ESCRITÓRIO) */
-        .logo-resizable-wrapper {
+        /* 2. SISTEMA DE RESIZE (CLIENTE/ESCRITÓRIO) */
+        .logo-resizable-wrapper 
             display: inline-flex;
-            resize: both;          /* O Segredo: Permite arrastar */
-            overflow: hidden;      /* Necessário para o resize funcionar */
+            resize: both;          /* Permite arrastar */
+            overflow: hidden;      
             vertical-align: middle;
             
-            /* Limites de tamanho */
+            /* Limites */
             min-width: 50px;
             min-height: 30px;
             max-width: 400px;
-            max-height: 150px;
+            max-height: 200px;
             
             /* Tamanho inicial */
-            width: auto;
+            width: 120px;
             height: 60px; 
             
-            border: 1px dashed transparent; /* Borda invisível por padrão */
-            transition: border-color 0.2s;
+            border: 1px dashed transparent; 
             position: relative;
         }
 
-        /* Mostra borda tracejada ao passar o mouse para indicar que dá pra mexer */
         .logo-resizable-wrapper:hover {
             border-color: rgba(0,0,0,0.2);
             cursor: nwse-resize;
         }
 
-        /* Indicador visual de 'puxar' no cantinho */
+        /* Indicador de resize */
         .logo-resizable-wrapper:hover::after {
             content: '';
-            position: absolute;
-            bottom: 0;
-            right: 0;
-            width: 8px;
-            height: 8px;
-            background: linear-gradient(135deg, transparent 50%, rgba(0,0,0,0.4) 50%);
+            position: absolute; bottom: 0; right: 0;
+            width: 10px; height: 10px;
+            background: linear-gradient(135deg, transparent 50%, #94a3b8 50%);
             pointer-events: none;
         }
 
-        /* A imagem dentro segue o tamanho do wrapper */
+        /* A CORREÇÃO DO "FUNDO CRESCE MAS IMAGEM NÃO": */
         .logo-resizable-wrapper img {
-            width: 100%;
-            height: 100%;
+            width: 100% !important;
+            height: 100% !important;
+            max-height: none !important; /* Remove travas */
+            max-width: none !important;
+            object-fit: contain;
+            pointer-events: none;
+        }
+        }
+
+        /* A MÁGICA: A imagem obedece 100% do tamanho da caixa arrastada */
+        .logo-resizable-wrapper img {
+            width: 100% !important;
+            height: 100% !important;
+            max-height: none !important; /* Remove travas antigas */
+            max-width: none !important;
             object-fit: contain;
             pointer-events: none;
         }
 
+        /* Remove estilos padrão que atrapalham */
         #clientLogo, #officeLogo {
             background: transparent !important;
             box-shadow: none !important;
@@ -497,10 +506,9 @@
     <div id="protectedContent" class="flex h-screen">
 
     <aside id="adminPanel" class="admin-panel w-80 glass-dark flex flex-col shrink-0 transition-all" style="z-index: 1000; position: relative;">
-        <div class="lexops-logo-admin flex items-center justify-center border-b" style="border-color: var(--layout-sidebar-border);">
-          <img src="assets/img/logo-lexops.png" alt="Logo" id="lexopsLogoImg">
-            <input type="file" id="lexopsMainLogo" accept="image/*" class="hidden">
-        </div>
+        <div class="lexops-logo-admin">
+    <img src="assets/img/logo-lexops.png" alt="LexOps Insight" id="lexopsLogoImg">
+</div>
 
         <div class="flex-1 overflow-y-auto p-5 pt-2 space-y-8" style="position: relative; z-index: 1001;">
             <section class="space-y-4">
@@ -1244,15 +1252,6 @@
                         transform: translateY(-2px) !important;
                         box-shadow: 0 8px 16px rgba(0, 0, 0, 0.12) !important;
                     }
-
-                    /* Logo Styling */
-                    #imgClient, #imgOffice, #lexopsLogoImg {
-                        max-height: 45px !important;
-                        object-fit: contain !important;
-                        background: transparent !important;
-                        border: none !important;
-                        box-shadow: none !important;
-                    }
                 `;
                 document.head.appendChild(style);
             }
@@ -1444,52 +1443,34 @@
         // ═══════════════════════════════════════════════════════════════════════
         // LOGO APPLICATION (Memory-Safe with RAF)
         // ═══════════════════════════════════════════════════════════════════════
-    function applyLogos() {
-            // Office logo
+        function applyLogos() {
+            // Gerencia APENAS Cliente e Escritório
             if(logoData.office) { 
                 const img = document.getElementById('imgOffice'); 
                 const wrap = document.getElementById('wrapOffice');
                 const ph = document.getElementById('phOffice');
-                
                 if(img && wrap) {
                     requestAnimationFrame(() => {
                         img.src = logoData.office; 
-                        // Mostra o Wrapper (que tem o resize)
                         wrap.classList.remove('hidden'); 
                         wrap.style.display = 'inline-flex'; 
-                        // Esconde placeholder
                         if(ph) ph.classList.add('hidden'); 
                     });
                 }
             }
             
-            // Client logo
             if(logoData.client) { 
                 const img = document.getElementById('imgClient'); 
                 const wrap = document.getElementById('wrapClient');
                 const ph = document.getElementById('phClient');
-                
                 if(img && wrap) {
                     requestAnimationFrame(() => {
                         img.src = logoData.client; 
-                        // Mostra o Wrapper (que tem o resize)
                         wrap.classList.remove('hidden'); 
                         wrap.style.display = 'inline-flex';
-                        // Esconde placeholder
                         if(ph) ph.classList.add('hidden'); 
                     });
                 }
-            }
-            
-            // LexOps logo (apenas atualiza a src se houver mudança, sem resize global)
-            if(logoData.lexops) {
-                const imgAdmin = document.getElementById('lexopsLogoImg');
-                requestAnimationFrame(() => {
-                    if(imgAdmin) {
-                        imgAdmin.src = logoData.lexops;
-                        imgAdmin.style.display = 'block';
-                    }
-                });
             }
         }
 
