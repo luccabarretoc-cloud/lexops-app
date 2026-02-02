@@ -382,7 +382,7 @@
 
         // B. Admin Online (Link com Token)
         const params = new URLSearchParams(window.location.search);
-        const token = params.get('t') || localStorage.getItem('lexops_token');
+       const token = params.get('t') || params.get('token') || localStorage.getItem('lexops_token');
         const API_ENDPOINT = "/.netlify/functions/validateToken";
 
         if (token && token.length > 5) {
