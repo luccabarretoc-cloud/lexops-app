@@ -478,7 +478,7 @@
                 
                 <!-- IMPORT BUTTON -->
                 <div class="space-y-2">
-                    <button id="btnImportFile" onclick="document.getElementById('fileInput').click()" class="w-full py-3 rounded-lg text-xs font-bold border flex items-center justify-center gap-2 transition-all group shadow-md admin-button" style="position: relative; z-index: 1002; cursor: pointer; background: rgba(34, 197, 94, 0.15); border-color: rgba(34, 197, 94, 0.3);">
+                    <button id="btnImportFile" onclick="console.log('🖱️ CLICK: btnImportFile'); const input = document.getElementById('fileInput'); console.log('Input encontrado:', input); if(input) input.click();" class="w-full py-3 rounded-lg text-xs font-bold border flex items-center justify-center gap-2 transition-all group shadow-md admin-button" style="position: relative; z-index: 1002; cursor: pointer; background: rgba(34, 197, 94, 0.15); border-color: rgba(34, 197, 94, 0.3);">
                         <i class="fas fa-file-excel text-emerald-400 text-sm group-hover:scale-110"></i> 
                         <span>Importar Arquivo XLSX/CSV</span>
                     </button>
@@ -1164,6 +1164,12 @@ ${Object.keys(data.metadata?.filtersReport?.removedDetails || {}).join(', ') || 
                 try {
                     BOOT_STATE.isDOMReady = true;
 
+                    // DEBUG: Mostrar status de boot
+                    console.log('🚀 bootApplication() INICIADO');
+                    console.log('   - window.__OFFLINE_PAYLOAD__:', !!window.__OFFLINE_PAYLOAD__);
+                    console.log('   - window.IS_OFFLINE_MODE:', !!window.IS_OFFLINE_MODE);
+                    console.log('   - window.OFFLINE_DATA:', !!window.OFFLINE_DATA);
+
                     // ⚡ PRIMEIRA VERIFICAÇÃO: Tem dados offline?
                     if (window.IS_OFFLINE_MODE && window.OFFLINE_DATA) {
                         console.log('🔴 MODO OFFLINE detectado (data hydration)');
@@ -1174,9 +1180,13 @@ ${Object.keys(data.metadata?.filtersReport?.removedDetails || {}).join(', ') || 
                         return;
                     }
 
-                    if (BOOT_STATE.isOfflineMode) {
+                    // ⚡ SEGUNDA VERIFICAÇÃO: Tem payload offline mas sem IS_OFFLINE_MODE?
+                    if (BOOT_STATE.isOfflineMode && window.__OFFLINE_PAYLOAD__) {
+                        console.log('📦 Modo Cliente (Payload Offline)');
                         bootClientMode();
                     } else {
+                        // ✅ MODO ADMIN: Interface de edição/upload
+                        console.log('⚙️ MODO ADMIN: Inicializando interface de administração');
                         bootAdminMode();
                     }
                 } catch (error) {
@@ -1232,12 +1242,38 @@ ${Object.keys(data.metadata?.filtersReport?.removedDetails || {}).join(', ') || 
             // ═══════════════════════════════════════════════════════════════════════
             function bootAdminMode() {
                 try {
+                    console.log('🔧 bootAdminMode(): Iniciando registro de event listeners...');
+                    
+                    // ✅ INDICADOR VISUAL: Modo Admin Ativo
+                    const indicator = document.createElement('div');
+                    indicator.id = 'admin-mode-indicator';
+                    indicator.style.cssText = `
+                        position: fixed;
+                        top: 0;
+                        left: 0;
+                        background: #10b981;
+                        color: white;
+                        padding: 8px 16px;
+                        font-size: 11px;
+                        font-weight: bold;
+                        border-radius: 0 0 8px 0;
+                        z-index: 9999;
+                        font-family: Inter, sans-serif;
+                    `;
+                    indicator.textContent = '⚙️ MODO ADMIN ATIVO';
+                    document.body.appendChild(indicator);
+                    
                     initializeExcelUpload();
+                    console.log('✅ initializeExcelUpload() executado');
                     initializeLogoUploads();
+                    console.log('✅ initializeLogoUploads() executado');
                     initializeWhiteLabelControls();
+                    console.log('✅ initializeWhiteLabelControls() executado');
                     applyVisualEnhancements();
+                    console.log('✅ applyVisualEnhancements() executado');
+                    console.log('🎉 MODO ADMIN PRONTO: Todos os event listeners registrados!');
                 } catch (error) {
-                    console.error('Admin mode boot failed:', error);
+                    console.error('💥 Admin mode boot failed:', error);
                     alert('Erro ao inicializar o sistema.');
                 }
             }
@@ -1246,12 +1282,22 @@ ${Object.keys(data.metadata?.filtersReport?.removedDetails || {}).join(', ') || 
             // EXCEL UPLOAD: Robust SheetJS Integration
             // ═══════════════════════════════════════════════════════════════════════
             function initializeExcelUpload() {
+                console.log('📂 initializeExcelUpload(): Procurando elemento fileInput...');
                 const fileInput = document.getElementById('fileInput');
-                if (!fileInput) return;
+                if (!fileInput) {
+                    console.error('❌ ERRO: Elemento #fileInput não encontrado no DOM!');
+                    return;
+                }
+                console.log('✅ Elemento #fileInput encontrado:', fileInput);
 
                 fileInput.addEventListener('change', async (event) => {
+                    console.log('🔥 EVENT LISTENER DISPARADO: fileInput.change');
                     const file = event.target?.files?.[0];
-                    if (!file) return;
+                    if (!file) {
+                        console.warn('⚠️ Nenhum arquivo selecionado');
+                        return;
+                    }
+                    console.log('📄 Arquivo selecionado:', file.name, file.size, 'bytes');
 
                     setLoadingState(true);
 
