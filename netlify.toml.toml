@@ -1,6 +1,0 @@
-[build]
-  publish = "app"
-  functions = "functions"
-
-[functions]
-  external_node_modules = ["@supabase/supabase-js"]
