@@ -47,11 +47,11 @@ exports.handler = async (event) => {
       };
     }
 
-    console.log('[validate-token] Consultando tabela access_tokens...');
+    console.log('[validate-token] Consultando tabela...');
     
-    // Primeiro, tenta buscar o token específico
+    // Qual é o nome da tabela? (access_tokens ou usuarios_assinantes?)
     const { data, error } = await supabase
-      .from("access_tokens")
+      .from("usuarios_assinantes")
       .select("*")
       .eq("token", token);
 
