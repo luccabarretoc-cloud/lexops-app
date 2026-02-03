@@ -13,53 +13,149 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="assets/css/app.css">
 
-   <script type="module">
+  <script type="module">
     import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm'
 
-    // 1. CONFIGURAÇÃO DO SEU PROJETO LEXOPSINSIGHT
-const SUPABASE_URL = 'https://amwjnkitkxtwqzsxnoin.supabase.co';
-const SUPABASE_KEY = 'sb_publishable_OqGyqzS5tnO0qLt86dK38A_t53QT5PR';
-const supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
+    // ═══════════════════════════════════════════════════════════════════════
+    // AUTENTICAÇÃO SUPABASE - FLUXO COMPLETO
+    // ═══════════════════════════════════════════════════════════════════════
+    const SUPABASE_URL = 'https://amwjnkitkxtwqzsxnoin.supabase.co';
+    const SUPABASE_KEY = 'sb_publishable_OqGyqzS5tnO0qLt86dK38A_t53QT5PR';
+    const supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
 
-// 2. O PORTEIRO (VALIDAÇÃO DE ACESSO)
-async function validarAcesso() {
-    const params = new URLSearchParams(window.location.search);
-    const token = params.get('token');
+    async function validarAcesso(tokenManual = null) {
+        try {
+            // 1. OBTER TOKEN: URL > Manual > localStorage
+            const params = new URLSearchParams(window.location.search);
+            const token = tokenManual || params.get('token') || localStorage.getItem('lexops_token');
 
-    // Se não houver token na URL, bloqueia tudo imediatamente
-    if (!token) {
-        document.body.innerHTML = `
-            <div style="background:#0f172a; color:white; height:100vh; display:flex; align-items:center; justify-content:center; font-family:sans-serif; text-align:center; padding:20px;">
-                <div>
-                    <h1 style="font-size:24px; margin-bottom:10px;">Acesso Restrito</h1>
-                    <p style="color:#94a3b8;">Por favor, acesse através do link exclusivo enviado para o seu e-mail.</p>
-                    <a href="https://lexopsinsight.com.br" style="color:#3b82f6; text-decoration:none; margin-top:20px; display:inline-block;">Voltar para o site</a>
-                </div>
-            </div>`;
-        return;
+            // 2. SEM TOKEN: Exibir tela de login
+            if (!token) {
+                exibirTelaLogin();
+                return;
+            }
+
+            // 3. COM TOKEN: Validar no Supabase
+            const { data, error } = await supabase
+                .from('usuarios_assinantes')
+                .select('status')
+                .eq('token', token)
+                .single();
+
+            // 4. VERIFICAÇÃO: Status 'pago' ou 'active'
+            if (error || !data) {
+                tratarErroAuth(tokenManual);
+                return;
+            }
+
+            const status = String(data.status).toLowerCase().trim();
+            if (status !== 'pago' && status !== 'active') {
+                tratarErroAuth(tokenManual, 'Status inválido: ' + data.status);
+                return;
+            }
+
+            // 5. SUCESSO: Liberar acesso
+            console.log('✅ Acesso autorizado! Status:', data.status);
+            
+            // Atualizar URL se entrada manual
+            if (tokenManual) {
+                const newUrl = window.location.protocol + '//' + window.location.host + window.location.pathname + '?token=' + tokenManual;
+                window.history.pushState({ path: newUrl }, '', newUrl);
+            }
+
+            // Salvar token
+            localStorage.setItem('lexops_token', token);
+
+            // Esconder login
+            ocultarTelaLogin();
+
+            // Liberar dashboard
+            const protectedContent = document.getElementById('protectedContent');
+            if (protectedContent) {
+                protectedContent.classList.remove('hidden');
+                protectedContent.style.display = 'flex';
+            }
+
+            // Sinalizar que logou
+            window.__ACCESS_GRANTED__ = true;
+            window.isAdmin = true;
+
+        } catch (err) {
+            console.error('❌ Erro na autenticação:', err);
+            tratarErroAuth(tokenManual, err.message);
+        }
     }
 
-    // AJUSTE EDUZZ: Consultamos se o token existe. 
-    // Mudamos de 'active' para 'pago' (que é como a Eduzz registra)
-    const { data, error } = await supabase
-        .from('usuarios_assinantes')
-        .select('status')
-        .eq('token', token)
-        .or('status.eq.pago,status.eq.active') // Aceita tanto 'pago' quanto 'active' para não dar erro
-        .single();
+    function exibirTelaLogin() {
+        const loginScreen = document.getElementById('login-screen');
+        if (loginScreen) {
+            loginScreen.style.display = 'flex';
+        }
 
-    if (error || !data) {
-        console.error("Erro na validação:", error);
-        alert("Acesso não autorizado. Verifique se o pagamento foi compensado.");
-        window.location.href = "https://lexopsinsight.com.br";
-        return;
+        const btnEntrar = document.getElementById('btn-entrar-manual');
+        if (btnEntrar) {
+            btnEntrar.onclick = async () => {
+                const input = document.getElementById('manual-token-input');
+                const token = input ? input.value.trim() : '';
+
+                if (!token) {
+                    exibirErroLogin('Por favor, insira o código de acesso.');
+                    return;
+                }
+
+                btnEntrar.disabled = true;
+                btnEntrar.innerText = 'Verificando...';
+                await validarAcesso(token);
+                btnEntrar.disabled = false;
+                btnEntrar.innerText = 'Entrar no Painel';
+            };
+        }
+
+        // Permitir Enter para enviar
+        const input = document.getElementById('manual-token-input');
+        if (input) {
+            input.onkeypress = (e) => {
+                if (e.key === 'Enter') btnEntrar?.click();
+            };
+        }
     }
 
-    console.log("LexOpsInsight: Acesso autorizado via Eduzz.");
-}
+    function ocultarTelaLogin() {
+        const loginScreen = document.getElementById('login-screen');
+        if (loginScreen) {
+            loginScreen.style.display = 'none';
+        }
+    }
 
-    // Executa a validação
-    validarAcesso();
+    function tratarErroAuth(tokenManual = null, mensagemCustom = null) {
+        if (tokenManual) {
+            // Erro no login manual: mostrar na tela
+            exibirErroLogin(mensagemCustom || 'Acesso negado. Verifique o código ou o pagamento.');
+        } else {
+            // Erro no link direto: mostrar tela de login
+            exibirTelaLogin();
+        }
+    }
+
+    function exibirErroLogin(mensagem) {
+        const msgElement = document.getElementById('login-error-msg');
+        if (msgElement) {
+            msgElement.textContent = mensagem;
+            msgElement.style.display = 'block';
+        }
+        const input = document.getElementById('manual-token-input');
+        if (input) {
+            input.value = '';
+            input.focus();
+        }
+    }
+
+    // INICIALIZAR AUTENTICAÇÃO
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', () => validarAcesso());
+    } else {
+        validarAcesso();
+    }
 </script>
 
 <script>
@@ -250,6 +346,17 @@ async function validarAcesso() {
         .logo-placeholder:hover { background: #f9f9f9; color: #666; }
 
         .hidden { display: none !important; }
+        
+        /* LOGIN SCREEN STYLING */
+        #login-screen {
+            z-index: 99999 !important;
+            background: #0f172a !important;
+        }
+        #login-screen div {
+            max-width: 420px;
+            width: 90%;
+        }
+        
         #pageLoader { position: fixed; inset: 0; background: #e2e8f0; z-index: 9999; display: flex; justify-content: center; align-items: center; }
         .spinner { width: 40px; height: 40px; border: 4px solid #cbd5e1; border-top-color: #4f46e5; border-radius: 50%; animation: spin 1s linear infinite; }
         @keyframes spin { to { transform: rotate(360deg); } }
@@ -264,89 +371,35 @@ async function validarAcesso() {
         ::-webkit-scrollbar { width: 6px; height: 6px; }
         ::-webkit-scrollbar-thumb { background: rgba(203, 213, 225, 0.5); border-radius: 3px; }
     </style>
-<script id="auth-logic">
-(function() {
-    // 1. Função de Desbloqueio Visual (Só roda quando a tela existe)
-    function unlockUI() {
-        const app = document.getElementById('protectedContent');
-        const loader = document.getElementById('pageLoader');
-        const err = document.getElementById('accessError');
 
-        // Remove Loader
-        if (loader) loader.style.display = 'none';
-
-        // Mostra o App (Garante display flex e remove hidden se existir)
-        if (app) {
-            app.classList.remove('hidden'); 
-            app.style.display = 'flex';
-        }
-
-        // Esconde erro
-        if (err) {
-            err.classList.remove('active');
-            err.style.display = 'none';
-        }
-    }
-
-    // 2. Lógica de Decisão (Quem entra e quem não entra)
-    function checkPermission() {
-        // A. Cliente Offline (Arquivo Exportado)
-        if (window.__OFFLINE_PAYLOAD__) {
-            window.__ACCESS_GRANTED__ = true;
-            window.isAdmin = false;
-            document.documentElement.classList.add('client-view');
-            unlockUI(); // <--- Libera visual
-            return;
-        }
-
-        // B. Admin Online (Link com Token)
-        const params = new URLSearchParams(window.location.search);
-       const token = params.get('t') || params.get('token') || localStorage.getItem('lexops_token');
-        const API_ENDPOINT = "/.netlify/functions/validateToken";
-
-        if (token && token.length > 5) {
-            // Sucesso Preliminar
-            window.__ACCESS_GRANTED__ = true;
-            window.isAdmin = true;
-            localStorage.setItem('lexops_token', token);
-            unlockUI(); // <--- Libera visual IMEDIATAMENTE
-
-            // Validação de Fundo (Sem travar tela)
-            fetch(`${API_ENDPOINT}?token=${token}`)
-                .then(r => r.json())
-                .then(d => { if(!d.valid) bloquear(); })
-                .catch(e => console.log("API Check Skipped"));
-        } else {
-            bloquear();
-        }
-    }
-
-    function bloquear() {
-        window.__ACCESS_GRANTED__ = false;
-        const app = document.getElementById('protectedContent');
-        const err = document.getElementById('accessError');
-        const loader = document.getElementById('pageLoader');
-        
-        if(app) app.style.display = 'none';
-        if(loader) loader.style.display = 'none';
-        if(err) { err.style.display = 'flex'; err.classList.add('active'); }
-    }
-
-    // 3. O SEGREDO: Só executa quando o navegador terminar de montar o HTML
-    if (document.readyState === 'loading') {
-        document.addEventListener('DOMContentLoaded', checkPermission);
-    } else {
-        // Se já carregou, roda direto
-        checkPermission();
-    }
-})();
-</script>
     </head>
 <body class="font-sans text-sm">
-
-    <div id="accessError">
-        <div class="message">Acesso Negado</div>
+   <div id="login-screen" style="display:none; position:fixed; inset:0; background:#0f172a; z-index:99999; flex-direction:column; align-items:center; justify-content:center; text-align:center; font-family: 'Inter', sans-serif;">
+    <div style="background:white; padding:40px; border-radius:16px; max-width:420px; width:90%; box-shadow:0 20px 50px -10px rgba(0,0,0,0.2); backdrop-filter:blur(10px);">
+        <div style="margin-bottom:30px; text-align:center;">
+            <div style="width:60px; height:60px; background:linear-gradient(135deg, #4f46e5, #7c3aed); border-radius:12px; display:flex; align-items:center; justify-content:center; margin:0 auto 20px; box-shadow:0 10px 20px rgba(79, 70, 229, 0.3);">
+                <i class="fas fa-lock" style="color:white; font-size:28px;"></i>
+            </div>
+            <h2 style="color:#1e293b; font-size:26px; font-weight:900; margin:0; margin-bottom:8px;">Acesso Restrito</h2>
+            <p style="color:#64748b; font-size:13px; margin:0; font-weight:500;">Digite o código de acesso enviado no seu e-mail</p>
+        </div>
+        
+        <div style="margin-bottom:20px;">
+            <label style="display:block; font-size:12px; font-weight:600; color:#475569; margin-bottom:8px; text-align:left; text-transform:uppercase; letter-spacing:0.5px;">Código de Transação (Eduzz)</label>
+            <input type="text" id="manual-token-input" placeholder="Ex: 12345678" style="width:100%; padding:14px 16px; border:2px solid #e2e8f0; border-radius:10px; font-size:15px; font-weight:500; outline:none; box-sizing:border-box; transition:all 0.3s; font-family:'Inter', monospace;" onfocus="this.style.borderColor='#4f46e5'; this.style.boxShadow='0 0 0 3px rgba(79, 70, 229, 0.1)'" onblur="this.style.borderColor='#e2e8f0'; this.style.boxShadow='none';">
+        </div>
+        
+        <button id="btn-entrar-manual" style="width:100%; background:linear-gradient(135deg, #4f46e5, #7c3aed); color:white; padding:14px; border:none; border-radius:10px; font-weight:700; font-size:15px; cursor:pointer; transition:all 0.3s; box-shadow:0 10px 25px rgba(79, 70, 229, 0.3); text-transform:uppercase; letter-spacing:0.5px;" onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 15px 35px rgba(79, 70, 229, 0.4)';" onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 10px 25px rgba(79, 70, 229, 0.3)';">
+            <i class="fas fa-sign-in-alt" style="margin-right:8px;"></i> Entrar no Painel
+        </button>
+        
+        <div id="login-error-msg" style="color:#dc2626; font-size:13px; margin-top:14px; display:none; padding:12px; background:#fee2e2; border-radius:8px; border-left:4px solid #dc2626; font-weight:500; text-align:left;"></div>
+        
+        <div style="margin-top:20px; padding-top:20px; border-top:1px solid #e5e7eb;">
+            <p style="color:#9ca3af; font-size:11px; margin:0; font-style:italic;">Powered by LexOps Insight</p>
+        </div>
     </div>
+</div>
 
     <div id="protectedContent" class="flex h-screen">
 
