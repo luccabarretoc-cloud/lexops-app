@@ -10,29 +10,73 @@
         const urlParams = new URLSearchParams(window.location.search);
         const token = urlParams.get('token');
 
+        document.documentElement.style.display = 'block';
+        document.body.style.display = 'block';
+
         if (!token) {
-          // Sem token: mostra a tela roxa
-          document.documentElement.style.display = 'block';
-          document.body.style.display = 'block';
+          // Sem token: mostra a tela de login
+          document.getElementById('login-screen').style.display = 'flex';
+          document.getElementById('protectedContent').style.display = 'none';
           return;
         }
 
+        // Tem token: valida
         try {
             const response = await fetch('/.netlify/functions/validate-token?token=' + token);
             const data = await response.json();
 
             if (data.valid) {
                 // Token válido: libera acesso
-                document.documentElement.style.display = 'block';
-                document.body.style.display = 'block';
+                document.getElementById('login-screen').style.display = 'none';
+                document.getElementById('protectedContent').style.display = 'flex';
             } else {
-                // Token inválido: redireciona sem token
-                window.location.href = '/';
+                // Token inválido: mostra formulário de login
+                document.getElementById('login-screen').style.display = 'flex';
+                document.getElementById('protectedContent').style.display = 'none';
+                document.getElementById('login-error-msg').style.display = 'block';
+                document.getElementById('login-error-msg').innerText = data.message || "Código inválido";
             }
         } catch (err) {
             console.error("Erro na validação:", err);
-            window.location.href = '/';
+            document.getElementById('login-screen').style.display = 'flex';
+            document.getElementById('protectedContent').style.display = 'none';
+            document.getElementById('login-error-msg').style.display = 'block';
+            document.getElementById('login-error-msg').innerText = "Erro ao conectar com o servidor";
         }
+
+        // Evento do botão Entrar
+        document.getElementById('btn-entrar-manual').addEventListener('click', async function() {
+            const inputToken = document.getElementById('manual-token-input').value.trim().toUpperCase();
+            if (!inputToken) {
+                document.getElementById('login-error-msg').style.display = 'block';
+                document.getElementById('login-error-msg').innerText = "Por favor, insira o código de acesso";
+                return;
+            }
+
+            try {
+                const response = await fetch('/.netlify/functions/validate-token?token=' + inputToken);
+                const data = await response.json();
+
+                if (data.valid) {
+                    // Token válido: redireciona para dashboard com token
+                    window.location.href = '?token=' + inputToken;
+                } else {
+                    document.getElementById('login-error-msg').style.display = 'block';
+                    document.getElementById('login-error-msg').innerText = data.message || "Código inválido";
+                }
+            } catch (err) {
+                console.error("Erro:", err);
+                document.getElementById('login-error-msg').style.display = 'block';
+                document.getElementById('login-error-msg').innerText = "Erro ao validar código";
+            }
+        });
+
+        // Enter no input de token
+        document.getElementById('manual-token-input').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                document.getElementById('btn-entrar-manual').click();
+            }
+        });
       })();
     </script>
     <script src="https://cdn.tailwindcss.com"></script>
