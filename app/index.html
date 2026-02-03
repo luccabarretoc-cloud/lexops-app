@@ -447,31 +447,6 @@
 
     </head>
 <body class="font-sans text-sm">
-   <div id="tokenModal" class="token-modal-overlay">
-     <div class="token-modal-container">
-       <h2>Acesso Restrito</h2>
-       <p>Digite seu código de transação para acessar</p>
-       
-       <form id="tokenForm" onsubmit="validateToken(event)">
-         <input 
-           type="text" 
-           id="transactionCode" 
-           placeholder="Código de Transação (Eduzz)"
-           required
-           autocomplete="off"
-         />
-         <button type="submit" class="token-submit-btn">
-           Validar Código
-         </button>
-       </form>
-       
-       <div id="tokenError" class="token-error"></div>
-       <div id="tokenLoading" class="token-loading" style="display:none;">
-         Validando código...
-       </div>
-     </div>
-   </div>
-
    <div id="login-screen" style="display:none; position:fixed; inset:0; background:#0f172a; z-index:99999; flex-direction:column; align-items:center; justify-content:center; text-align:center; font-family: 'Inter', sans-serif;">
     <div style="background:white; padding:40px; border-radius:16px; max-width:420px; width:90%; box-shadow:0 20px 50px -10px rgba(0,0,0,0.2); backdrop-filter:blur(10px);">
         <div style="margin-bottom:30px; text-align:center;">
