@@ -1,6 +1,6 @@
 [build]
   publish = "app"
-  functions = "netlify/functions"
+  functions = "app/netlify/functions"
 
 [functions]
   external_node_modules = ["@supabase/supabase-js"]
