@@ -1,108 +1,66 @@
 <!DOCTYPE html>
 <html lang="pt-br">
 <head>
-    <style>body { display: none !important; }</style>
-    <script>
-      (async function() {
-        const urlParams = new URLSearchParams(window.location.search);
-        let token = urlParams.get('token');
-
-        const showAuthScreen = (message = "Acesso Restrito", isError = false) => {
-          document.documentElement.innerHTML = `
-            <html lang="pt-br">
-            <head>
-              <meta charset="UTF-8">
-              <meta name="viewport" content="width=device-width, initial-scale=1.0">
-              <title>Validação de Acesso | LexOpsInsight</title>
-            </head>
-            <body style="background:#020617;color:white;display:flex;justify-content:center;align-items:center;height:100vh;font-family:sans-serif;margin:0;padding:0;">
-              <div style="text-align:center;padding:40px;border:1px solid ${isError ? '#ef4444' : '#1e293b'};border-radius:24px;background:#0f172a;max-width:400px;width:90%;box-shadow:0 20px 50px rgba(0,0,0,0.5);">
-                <div style="background:${isError ? '#ef4444' : '#7c3aed'};width:60px;height:60px;border-radius:50%;display:flex;justify-content:center;align-items:center;margin:0 auto 25px;box-shadow: 0 0 20px ${isError ? '#ef444455' : '#7c3aed55'};">
-                   <span style="font-size:30px;">${isError ? '✕' : '🔒'}</span>
-                </div>
-                <h1 style="font-size:22px;margin-bottom:10px;font-weight:800;">${message}</h1>
-                <p style="color:#94a3b8;margin-bottom:30px;font-size:14px;line-height:1.5;">Para acessar sua inteligência jurídica, insira o código recebido no seu e-mail da compra.</p>
-                
-                <form onsubmit="event.preventDefault(); handleTokenSubmit();">
-                  <label style="display:block; text-align:left; font-size:11px; color:#64748b; text-transform:uppercase; font-weight:700; margin-bottom:8px; margin-left:4px;">Código de Transação (Eduzz)</label>
-                  <input type="text" id="tkn" placeholder="Ex: 56902318" required style="width:100%;padding:15px;border-radius:12px;border:1px solid #334155;background:#020617;color:white;margin-bottom:20px;box-sizing:border-box;text-align:center;font-family:monospace;font-size:16px;outline:none;transition:border-color 0.2s;" onfocus="this.style.borderColor='#7c3aed'">
-                  <button type="submit" id="submitBtn" style="width:100%;background:#7c3aed;color:white;padding:15px;border:none;border-radius:12px;font-weight:bold;cursor:pointer;font-size:14px;transition:transform 0.1s, background 0.2s;" onmouseover="this.style.background='#6d28d9'" onmousedown="this.style.transform='scale(0.98)'" onmouseup="this.style.transform='scale(1)'">
-                    VALIDAR CÓDIGO DE TRANSAÇÃO
-                  </button>
-                </form>
-                
-                <div style="margin-top:30px; padding-top:20px; border-top:1px solid #1e293b;">
-                   <p style="font-size:11px;color:#475569;margin:0;">Suporte: contato@lexopsinsight.com.br</p>
-                </div>
-              </div>
-              <script>
-                window.handleTokenSubmit = async function() {
-                  const input = document.getElementById('tkn');
-                  const btn = document.getElementById('submitBtn');
-                  const token = input.value.trim().toUpperCase();
-                  
-                  if (!token) return;
-                  
-                  btn.disabled = true;
-                  btn.innerText = 'Verificando...';
-                  
-                  try {
-                    const response = await fetch('/.netlify/functions/validate-token?token=' + token);
-                    if (!response.ok) {
-                      const errData = await response.json();
-                      showAuthScreen(errData.message || "Acesso Negado", true);
-                      return;
-                    }
-                    
-                    const data = await response.json();
-                    if (!data.valid) {
-                      showAuthScreen(data.message || "Código Inválido", true);
-                    } else {
-                      window.location.href = '?token=' + token;
-                    }
-                  } catch (err) {
-                    console.error("Erro na validação", err);
-                    showAuthScreen("Serviço Indisponível", true);
-                  } finally {
-                    btn.disabled = false;
-                    btn.innerText = 'VALIDAR CÓDIGO DE TRANSAÇÃO';
-                  }
-                };
-              </script>
-            </body>
-            </html>`;
-        };
-
-        if (!token) {
-          showAuthScreen("Área do Assinante");
-          return;
-        }
-
-        try {
-          const response = await fetch(`/.netlify/functions/validate-token?token=${token}`);
-          if (!response.ok) {
-            const errData = await response.json();
-            showAuthScreen(errData.message || "Acesso Negado", true);
-            return;
-          }
-          
-          const data = await response.json();
-          if (!data.valid) {
-            showAuthScreen(data.message || "Código Inválido", true);
-          } else {
-            // Token válido: liberar acesso ao site
-            document.body.style.display = 'block';
-          }
-        } catch (err) {
-          console.error("Erro na validação", err);
-          showAuthScreen("Serviço Indisponível", true);
-        }
-      })();
-    </script>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Dashboard Jurídico | LexOpsInsight</title>
+    
+    <style id="anti-flash">
+        body { display: none !important; }
+    </style>
 
+    <script>
+      (async function() {
+        const urlParams = new URLSearchParams(window.location.search);
+        const token = urlParams.get('token');
+
+        // Função para mostrar a tela de login SEM apagar o resto do arquivo
+        const forceLogin = (msg = "Área do Assinante", isError = false) => {
+            document.addEventListener("DOMContentLoaded", () => {
+                document.body.innerHTML = `
+                <div style="background:#020617;color:white;display:flex;justify-content:center;align-items:center;height:100vh;width:100vw;font-family:sans-serif;position:fixed;top:0;left:0;z-index:999999;">
+                  <div style="text-align:center;padding:40px;border:1px solid ${isError ? '#ef4444' : '#1e293b'};border-radius:24px;background:#0f172a;max-width:400px;width:90%;box-shadow:0 20px 50px rgba(0,0,0,0.5);">
+                    <div style="background:${isError ? '#ef4444' : '#7c3aed'};width:60px;height:60px;border-radius:50%;display:flex;justify-content:center;align-items:center;margin:0 auto 25px;">
+                       <span style="font-size:30px;">${isError ? '✕' : '🔒'}</span>
+                    </div>
+                    <h1 style="font-size:22px;margin-bottom:10px;font-weight:800;">${msg}</h1>
+                    <p style="color:#94a3b8;margin-bottom:30px;font-size:14px;line-height:1.5;">Insira o Código de Transação (Eduzz) para acessar.</p>
+                    <form onsubmit="event.preventDefault(); window.location.href='?token=' + document.getElementById('tkn').value.trim().toUpperCase()">
+                      <input type="text" id="tkn" placeholder="Ex: 56902318" required style="width:100%;padding:15px;border-radius:12px;border:1px solid #334155;background:#020617;color:white;margin-bottom:20px;box-sizing:border-box;text-align:center;font-size:16px;">
+                      <button type="submit" style="width:100%;background:#7c3aed;color:white;padding:15px;border:none;border-radius:12px;font-weight:bold;cursor:pointer;">VALIDAR CÓDIGO DE TRANSAÇÃO</button>
+                    </form>
+                  </div>
+                </div>`;
+                document.body.style.display = 'block';
+            });
+        };
+
+        if (!token) {
+            forceLogin();
+            return;
+        }
+
+        try {
+            // Chama sua função validate-token no Netlify
+            const response = await fetch('/.netlify/functions/validate-token?token=' + token);
+            const data = await response.json();
+
+            if (data.valid) {
+                // TOKEN VÁLIDO: Remove o bloqueio e mostra o dashboard original
+                document.addEventListener("DOMContentLoaded", () => {
+                    const styleTag = document.getElementById('anti-flash');
+                    if (styleTag) styleTag.remove();
+                    document.body.style.display = 'block';
+                });
+            } else {
+                forceLogin(data.message || "Código Inválido", true);
+            }
+        } catch (err) {
+            console.error("Erro na validação:", err);
+            forceLogin("Erro de Conexão", true);
+        }
+      })();
+    </script>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
@@ -110,151 +68,6 @@
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="assets/css/app.css">
-
-  <script type="module" id="auth-guard">
-    import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm'
-
-    // ═══════════════════════════════════════════════════════════════════════
-    // AUTENTICAÇÃO SUPABASE - FLUXO COMPLETO
-    // ═══════════════════════════════════════════════════════════════════════
-    const SUPABASE_URL = 'https://amwjnkitkxtwqzsxnoin.supabase.co';
-    const SUPABASE_KEY = 'sb_publishable_OqGyqzS5tnO0qLt86dK38A_t53QT5PR';
-    const supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
-
-    async function validarAcesso(tokenManual = null) {
-        try {
-            // 1. OBTER TOKEN: URL > Manual > localStorage
-            const params = new URLSearchParams(window.location.search);
-            const token = tokenManual || params.get('token') || localStorage.getItem('lexops_token');
-
-            // 2. SEM TOKEN: Exibir tela de login
-            if (!token) {
-                exibirTelaLogin();
-                return;
-            }
-
-            // 3. COM TOKEN: Validar no Supabase
-            const { data, error } = await supabase
-                .from('usuarios_assinantes')
-                .select('status')
-                .eq('token', token)
-                .single();
-
-            // 4. VERIFICAÇÃO: Status 'pago' ou 'active'
-            if (error || !data) {
-                tratarErroAuth(tokenManual);
-                return;
-            }
-
-            const status = String(data.status).toLowerCase().trim();
-            if (status !== 'pago' && status !== 'active') {
-                tratarErroAuth(tokenManual, 'Status inválido: ' + data.status);
-                return;
-            }
-
-            // 5. SUCESSO: Liberar acesso
-            console.log('✅ Acesso autorizado! Status:', data.status);
-            
-            // Atualizar URL se entrada manual
-            if (tokenManual) {
-                const newUrl = window.location.protocol + '//' + window.location.host + window.location.pathname + '?token=' + tokenManual;
-                window.history.pushState({ path: newUrl }, '', newUrl);
-            }
-
-            // Salvar token
-            localStorage.setItem('lexops_token', token);
-
-            // Esconder login
-            ocultarTelaLogin();
-
-            // Liberar dashboard
-            const protectedContent = document.getElementById('protectedContent');
-            if (protectedContent) {
-                protectedContent.classList.remove('hidden');
-                protectedContent.style.display = 'flex';
-            }
-
-            // Sinalizar que logou
-            window.__ACCESS_GRANTED__ = true;
-            window.isAdmin = true;
-
-        } catch (err) {
-            console.error('❌ Erro na autenticação:', err);
-            tratarErroAuth(tokenManual, err.message);
-        }
-    }
-
-    function exibirTelaLogin() {
-        const loginScreen = document.getElementById('login-screen');
-        if (loginScreen) {
-            loginScreen.style.display = 'flex';
-        }
-
-        const btnEntrar = document.getElementById('btn-entrar-manual');
-        if (btnEntrar) {
-            btnEntrar.onclick = async () => {
-                const input = document.getElementById('manual-token-input');
-                const token = input ? input.value.trim() : '';
-
-                if (!token) {
-                    exibirErroLogin('Por favor, insira o código de acesso.');
-                    return;
-                }
-
-                btnEntrar.disabled = true;
-                btnEntrar.innerText = 'Verificando...';
-                await validarAcesso(token);
-                btnEntrar.disabled = false;
-                btnEntrar.innerText = 'Entrar no Painel';
-            };
-        }
-
-        // Permitir Enter para enviar
-        const input = document.getElementById('manual-token-input');
-        if (input) {
-            input.onkeypress = (e) => {
-                if (e.key === 'Enter') btnEntrar?.click();
-            };
-        }
-    }
-
-    function ocultarTelaLogin() {
-        const loginScreen = document.getElementById('login-screen');
-        if (loginScreen) {
-            loginScreen.style.display = 'none';
-        }
-    }
-
-    function tratarErroAuth(tokenManual = null, mensagemCustom = null) {
-        if (tokenManual) {
-            // Erro no login manual: mostrar na tela
-            exibirErroLogin(mensagemCustom || 'Acesso negado. Verifique o código ou o pagamento.');
-        } else {
-            // Erro no link direto: mostrar tela de login
-            exibirTelaLogin();
-        }
-    }
-
-    function exibirErroLogin(mensagem) {
-        const msgElement = document.getElementById('login-error-msg');
-        if (msgElement) {
-            msgElement.textContent = mensagem;
-            msgElement.style.display = 'block';
-        }
-        const input = document.getElementById('manual-token-input');
-        if (input) {
-            input.value = '';
-            input.focus();
-        }
-    }
-
-    // INICIALIZAR AUTENTICAÇÃO
-    if (document.readyState === 'loading') {
-        document.addEventListener('DOMContentLoaded', () => validarAcesso());
-    } else {
-        validarAcesso();
-    }
-</script>
 
 <script>
     tailwind.config = {
@@ -2485,89 +2298,6 @@
         }
         
         function closeDetail() { document.getElementById('detailModal').classList.replace('flex','hidden'); }
-
-    </script>
-
-    <script>
-// Função para validar token com Netlify Function
-async function validateToken(event) {
-  event.preventDefault();
-  
-  const code = document.getElementById('transactionCode').value.trim();
-  const loadingDiv = document.getElementById('tokenLoading');
-  const errorDiv = document.getElementById('tokenError');
-  const submitBtn = event.target.querySelector('button[type="submit"]');
-  
-  // Limpar erros anteriores
-  errorDiv.textContent = '';
-  
-  // Mostrar loading
-  loadingDiv.style.display = 'block';
-  submitBtn.disabled = true;
-  
-  try {
-    // Chamar a função Netlify
-    const response = await fetch('/.netlify/functions/validate-token', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({ code: code })
-    });
-    
-    const data = await response.json();
-    
-    if (data.valid) {
-      // Token válido - liberar acesso
-      localStorage.setItem('lexopsToken', code);
-      document.getElementById('tokenModal').style.display = 'none';
-      document.body.classList.remove('token-locked');
-    } else {
-      // Token inválido
-      errorDiv.textContent = data.message || 'Código inválido. Tente novamente.';
-      submitBtn.disabled = false;
-      loadingDiv.style.display = 'none';
-    }
-  } catch (error) {
-    errorDiv.textContent = 'Erro ao validar código. Tente novamente.';
-    submitBtn.disabled = false;
-    loadingDiv.style.display = 'none';
-    console.error('Erro:', error);
-  }
-}
-
-// Verificar se usuário já tem token válido ao carregar
-document.addEventListener('DOMContentLoaded', function() {
-  const savedToken = localStorage.getItem('lexopsToken');
-  
-  if (savedToken) {
-    // Revalidar token ao carregar página
-    fetch('/.netlify/functions/validate-token', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({ code: savedToken })
-    })
-    .then(response => response.json())
-    .then(data => {
-      if (data.valid) {
-        document.getElementById('tokenModal').style.display = 'none';
-      } else {
-        localStorage.removeItem('lexopsToken');
-        document.getElementById('tokenModal').style.display = 'flex';
-      }
-    })
-    .catch(error => {
-      console.error('Erro ao validar token salvo:', error);
-      document.getElementById('tokenModal').style.display = 'flex';
-    });
-  } else {
-    // Mostrar modal se não houver token
-    document.getElementById('tokenModal').style.display = 'flex';
-  }
-});
-
 
     </script>
 
