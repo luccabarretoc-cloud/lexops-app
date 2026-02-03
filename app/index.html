@@ -20,9 +20,9 @@
           return;
         }
 
-        // Tem token: valida
+        // Tem token: valida com a função Netlify
         try {
-            const response = await fetch('/.netlify/functions/validate-token?token=' + token);
+            const response = await fetch('https://app.lexopsinsight.com.br/.netlify/functions/validate-token?token=' + encodeURIComponent(token));
             const data = await response.json();
 
             if (data.valid) {
@@ -47,6 +47,7 @@
         // Evento do botão Entrar
         document.getElementById('btn-entrar-manual').addEventListener('click', async function() {
             const inputToken = document.getElementById('manual-token-input').value.trim().toUpperCase();
+            
             if (!inputToken) {
                 document.getElementById('login-error-msg').style.display = 'block';
                 document.getElementById('login-error-msg').innerText = "Por favor, insira o código de acesso";
@@ -54,15 +55,15 @@
             }
 
             try {
-                const response = await fetch('/.netlify/functions/validate-token?token=' + inputToken);
+                const response = await fetch('https://app.lexopsinsight.com.br/.netlify/functions/validate-token?token=' + encodeURIComponent(inputToken));
                 const data = await response.json();
 
                 if (data.valid) {
                     // Token válido: redireciona para dashboard com token
-                    window.location.href = '?token=' + inputToken;
+                    window.location.href = '?token=' + encodeURIComponent(inputToken);
                 } else {
                     document.getElementById('login-error-msg').style.display = 'block';
-                    document.getElementById('login-error-msg').innerText = data.message || "Código inválido";
+                    document.getElementById('login-error-msg').innerText = data.message || "Código de acesso inválido";
                 }
             } catch (err) {
                 console.error("Erro:", err);
