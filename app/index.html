@@ -13,7 +13,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="assets/css/app.css">
 
-  <script type="module">
+  <script type="module" id="auth-guard">
     import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm'
 
     // ═══════════════════════════════════════════════════════════════════════
@@ -1166,6 +1166,25 @@
                 alert('⚠️ Nenhum dado para exportar. Importe uma planilha primeiro.');
                 return;
             }
+
+            // --- INICIO DA LIMPEZA ---
+            let html = document.documentElement.outerHTML;
+            // Remove o script que pede senha
+            html = html.replace(/<script type="module" id="auth-guard">[\s\S]*?<\/script>/, "");
+            // Remove a tela de login visualmente
+            html = html.replace(/<div id="login-screen"[\s\S]*?<\/div>/, "");
+
+            // Injeta os dados atuais para funcionar offline
+            const scriptDados = `<script>
+    window.globalData = ${JSON.stringify(window.globalData || [])};
+    document.addEventListener("DOMContentLoaded", () => {
+        document.getElementById('protectedContent').classList.remove('hidden');
+        document.getElementById('protectedContent').style.display = 'flex';
+        if(typeof renderizarDashboard === 'function') renderizarDashboard(window.globalData);
+    });
+<\/script>`;
+            html = html.replace('</body>', scriptDados + '</body>');
+            // --- FIM DA LIMPEZA ---
 
             const clone = document.documentElement.cloneNode(true);
             const body = clone.querySelector('body');
