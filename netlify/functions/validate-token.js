@@ -1,11 +1,5 @@
 const { createClient } = require("@supabase/supabase-js");
 
-// HARDCODED PARA TESTE - Remove depois!
-const VALID_TOKENS_TEST = {
-  '12345678': { email: 'alice.johnson@example.com', customer_name: 'Alice Johnson' },
-  'vitoria2026': { email: 'luccacazetta@hotmail.com', customer_name: 'Lucca Cazetta' }
-};
-
 const supabase = createClient(
   process.env.SUPABASE_URL,
   process.env.SUPABASE_SERVICE_KEY
@@ -26,13 +20,11 @@ exports.handler = async (event) => {
   try {
     const token = event.queryStringParameters?.token;
 
-    console.log('[validate-token] === INICIO ===');
-    console.log('[validate-token] Token recebido:', token);
-    console.log('[validate-token] SUPABASE_URL:', process.env.SUPABASE_URL ? '✓ Configurado' : '✗ NÃO CONFIGURADO');
-    console.log('[validate-token] SUPABASE_SERVICE_KEY:', process.env.SUPABASE_SERVICE_KEY ? '✓ Configurado' : '✗ NÃO CONFIGURADO');
+    console.log('[validate-token] === VALIDAÇÃO INICIADA ===');
+    console.log('[validate-token] Token recebido:', token ? token.substring(0, 4) + '...' : 'VAZIO');
 
     if (!token) {
-      console.log('[validate-token] Token vazio!');
+      console.log('[validate-token] ❌ Token ausente');
       return { 
         statusCode: 401, 
         headers,
@@ -43,29 +35,14 @@ exports.handler = async (event) => {
       };
     }
 
-    // TESTE COM HARDCODED PRIMEIRO
-    if (VALID_TOKENS_TEST[token]) {
-      console.log('[validate-token] ✅ Token encontrado no teste hardcoded!');
-      return {
-        statusCode: 200,
-        headers,
-        body: JSON.stringify({ 
-          valid: true, 
-          email: VALID_TOKENS_TEST[token].email,
-          customer_name: VALID_TOKENS_TEST[token].customer_name
-        })
-      };
-    }
-
-    // DEPOIS TENTA SUPABASE
     if (!process.env.SUPABASE_URL || !process.env.SUPABASE_SERVICE_KEY) {
-      console.log('[validate-token] ❌ Variáveis de ambiente não configuradas! Usando apenas teste hardcoded.');
+      console.log('[validate-token] ❌ Variáveis de ambiente não configuradas');
       return { 
-        statusCode: 403, 
+        statusCode: 500, 
         headers,
         body: JSON.stringify({ 
           valid: false, 
-          message: "Servidor de autenticação não configurado. Use: 12345678 ou vitoria2026 para teste." 
+          message: "Erro de configuração no servidor." 
         }) 
       };
     }
@@ -77,34 +54,10 @@ exports.handler = async (event) => {
       .eq("token", token)
       .single();
 
-    console.log('[validate-token] Erro de consulta:', error?.message || 'Nenhum erro');
-    console.log('[validate-token] Código do erro:', error?.code);
-    console.log('[validate-token] Dados encontrados:', data ? 'SIM' : 'NÃO');
+    console.log('[validate-token] Resposta:', error ? '❌ Erro' : '✓ Sucesso');
 
     if (error) {
-      console.log('[validate-token] Erro ao buscar:', error.message);
-      if (error.code === 'PGRST116') {
-        return { 
-          statusCode: 403, 
-          headers,
-          body: JSON.stringify({ 
-            valid: false, 
-            message: "Código de transação inválido ou não encontrado." 
-          }) 
-        };
-      }
-      return { 
-        statusCode: 403, 
-        headers,
-        body: JSON.stringify({ 
-          valid: false, 
-          message: "Erro ao buscar token: " + error.message 
-        }) 
-      };
-    }
-
-    if (!data) {
-      console.log('[validate-token] Nenhum registro encontrado');
+      console.log('[validate-token] ❌ Token não encontrado');
       return { 
         statusCode: 403, 
         headers,
@@ -115,17 +68,26 @@ exports.handler = async (event) => {
       };
     }
 
-    console.log('[validate-token] ✓ Token encontrado no Supabase!');
-    console.log('[validate-token] Email:', data.email);
-    console.log('[validate-token] Customer:', data.customer_name);
-    console.log('[validate-token] Status:', data.status);
+    if (!data) {
+      console.log('[validate-token] ❌ Nenhum registro encontrado');
+      return { 
+        statusCode: 403, 
+        headers,
+        body: JSON.stringify({ 
+          valid: false, 
+          message: "Código de transação inválido ou não encontrado." 
+        }) 
+      };
+    }
+
+    console.log('[validate-token] ✓ Token encontrado!');
 
     if (data.expires_at) {
       const now = new Date();
       const expiresAt = new Date(data.expires_at);
       
       if (expiresAt < now) {
-        console.log('[validate-token] ✗ Token expirado!');
+        console.log('[validate-token] ❌ Token expirado');
         return { 
           statusCode: 403, 
           headers,
@@ -142,7 +104,7 @@ exports.handler = async (event) => {
       const validStatuses = ['active', 'pago', 'paid', 'valid', 'approved'];
       
       if (!validStatuses.includes(statusLower)) {
-        console.log('[validate-token] ✗ Status não permitido!');
+        console.log('[validate-token] ❌ Status não permitido:', data.status);
         return { 
           statusCode: 403, 
           headers,
@@ -154,7 +116,7 @@ exports.handler = async (event) => {
       }
     }
 
-    console.log('[validate-token] ✅ SUCESSO - Token VÁLIDO!');
+    console.log('[validate-token] ✅ VALIDAÇÃO SUCESSO');
     return {
       statusCode: 200,
       headers,
