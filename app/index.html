@@ -1275,11 +1275,7 @@
             // Injeta os dados atuais para funcionar offline
             const scriptDados = `<script>
     window.globalData = ${JSON.stringify(window.globalData || [])};
-    document.addEventListener("DOMContentLoaded", () => {
-        document.getElementById('protectedContent').classList.remove('hidden');
-        document.getElementById('protectedContent').style.display = 'flex';
-        if(typeof renderizarDashboard === 'function') renderizarDashboard(window.globalData);
-    });
+    if(typeof renderizarDashboard === 'function') renderizarDashboard(window.globalData);
 <\/script>`;
             html = html.replace('</body>', scriptDados + '</body>');
             // --- FIM DA LIMPEZA ---
