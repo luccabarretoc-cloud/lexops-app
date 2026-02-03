@@ -1,10 +1,108 @@
 <!DOCTYPE html>
 <html lang="pt-br">
 <head>
+    <style>body { display: none !important; }</style>
+    <script>
+      (async function() {
+        const urlParams = new URLSearchParams(window.location.search);
+        let token = urlParams.get('token');
+
+        const showAuthScreen = (message = "Acesso Restrito", isError = false) => {
+          document.documentElement.innerHTML = `
+            <html lang="pt-br">
+            <head>
+              <meta charset="UTF-8">
+              <meta name="viewport" content="width=device-width, initial-scale=1.0">
+              <title>Validação de Acesso | LexOpsInsight</title>
+            </head>
+            <body style="background:#020617;color:white;display:flex;justify-content:center;align-items:center;height:100vh;font-family:sans-serif;margin:0;padding:0;">
+              <div style="text-align:center;padding:40px;border:1px solid ${isError ? '#ef4444' : '#1e293b'};border-radius:24px;background:#0f172a;max-width:400px;width:90%;box-shadow:0 20px 50px rgba(0,0,0,0.5);">
+                <div style="background:${isError ? '#ef4444' : '#7c3aed'};width:60px;height:60px;border-radius:50%;display:flex;justify-content:center;align-items:center;margin:0 auto 25px;box-shadow: 0 0 20px ${isError ? '#ef444455' : '#7c3aed55'};">
+                   <span style="font-size:30px;">${isError ? '✕' : '🔒'}</span>
+                </div>
+                <h1 style="font-size:22px;margin-bottom:10px;font-weight:800;">${message}</h1>
+                <p style="color:#94a3b8;margin-bottom:30px;font-size:14px;line-height:1.5;">Para acessar sua inteligência jurídica, insira o código recebido no seu e-mail da compra.</p>
+                
+                <form onsubmit="event.preventDefault(); handleTokenSubmit();">
+                  <label style="display:block; text-align:left; font-size:11px; color:#64748b; text-transform:uppercase; font-weight:700; margin-bottom:8px; margin-left:4px;">Código de Transação (Eduzz)</label>
+                  <input type="text" id="tkn" placeholder="Ex: 56902318" required style="width:100%;padding:15px;border-radius:12px;border:1px solid #334155;background:#020617;color:white;margin-bottom:20px;box-sizing:border-box;text-align:center;font-family:monospace;font-size:16px;outline:none;transition:border-color 0.2s;" onfocus="this.style.borderColor='#7c3aed'">
+                  <button type="submit" id="submitBtn" style="width:100%;background:#7c3aed;color:white;padding:15px;border:none;border-radius:12px;font-weight:bold;cursor:pointer;font-size:14px;transition:transform 0.1s, background 0.2s;" onmouseover="this.style.background='#6d28d9'" onmousedown="this.style.transform='scale(0.98)'" onmouseup="this.style.transform='scale(1)'">
+                    VALIDAR CÓDIGO DE TRANSAÇÃO
+                  </button>
+                </form>
+                
+                <div style="margin-top:30px; padding-top:20px; border-top:1px solid #1e293b;">
+                   <p style="font-size:11px;color:#475569;margin:0;">Suporte: contato@lexopsinsight.com.br</p>
+                </div>
+              </div>
+              <script>
+                window.handleTokenSubmit = async function() {
+                  const input = document.getElementById('tkn');
+                  const btn = document.getElementById('submitBtn');
+                  const token = input.value.trim().toUpperCase();
+                  
+                  if (!token) return;
+                  
+                  btn.disabled = true;
+                  btn.innerText = 'Verificando...';
+                  
+                  try {
+                    const response = await fetch('/.netlify/functions/validate-token?token=' + token);
+                    if (!response.ok) {
+                      const errData = await response.json();
+                      showAuthScreen(errData.message || "Acesso Negado", true);
+                      return;
+                    }
+                    
+                    const data = await response.json();
+                    if (!data.valid) {
+                      showAuthScreen(data.message || "Código Inválido", true);
+                    } else {
+                      window.location.href = '?token=' + token;
+                    }
+                  } catch (err) {
+                    console.error("Erro na validação", err);
+                    showAuthScreen("Serviço Indisponível", true);
+                  } finally {
+                    btn.disabled = false;
+                    btn.innerText = 'VALIDAR CÓDIGO DE TRANSAÇÃO';
+                  }
+                };
+              </script>
+            </body>
+            </html>`;
+        };
+
+        if (!token) {
+          showAuthScreen("Área do Assinante");
+          return;
+        }
+
+        try {
+          const response = await fetch(`/.netlify/functions/validate-token?token=${token}`);
+          if (!response.ok) {
+            const errData = await response.json();
+            showAuthScreen(errData.message || "Acesso Negado", true);
+            return;
+          }
+          
+          const data = await response.json();
+          if (!data.valid) {
+            showAuthScreen(data.message || "Código Inválido", true);
+          } else {
+            // Token válido: liberar acesso ao site
+            document.body.style.display = 'block';
+          }
+        } catch (err) {
+          console.error("Erro na validação", err);
+          showAuthScreen("Serviço Indisponível", true);
+        }
+      })();
+    </script>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Dashboard Jurídico | LexOpsInsight</title>
-    
+
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
@@ -372,8 +470,72 @@
         ::-webkit-scrollbar-thumb { background: rgba(203, 213, 225, 0.5); border-radius: 3px; }
     </style>
 
+    <style>
+        #auth-screen {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(135deg, #020617 0%, #0f172a 100%);
+            z-index: 9999;
+        }
+
+        #auth-screen.hidden {
+            display: none;
+        }
+
+        #dashboard.hidden {
+            display: none;
+        }
+    </style>
+
     </head>
 <body class="font-sans text-sm">
+   <div id="auth-screen">
+       <div style="max-width: 420px; text-align: center; padding: 40px; 
+                   border: 1px solid rgba(100, 116, 139, 0.3);
+                   border-radius: 24px; background: rgba(15, 23, 42, 0.8);
+                   color: white;">
+           
+           <h1 style="font-size: 26px; margin-bottom: 20px;">🔒 LexOpsInsight</h1>
+           <p style="color: #94a3b8; margin-bottom: 30px;">
+               Digite seu código de transação Eduzz
+           </p>
+
+           <form onsubmit="return handleAuthSubmit(event)">
+               <input 
+                   type="text" 
+                   id="token-input" 
+                   placeholder="Ex: 56902318"
+                   style="width: 100%; padding: 12px; margin-bottom: 15px;
+                          border: 2px solid #334155; border-radius: 8px;
+                          background: rgba(2, 6, 23, 0.8); color: white;
+                          text-align: center; font-family: monospace;"
+                   required
+               >
+               <button type="submit" id="submit-btn"
+                       style="width: 100%; padding: 12px; background: #7c3aed;
+                              color: white; border: none; border-radius: 8px;
+                              font-weight: bold; cursor: pointer;">
+                   VALIDAR CÓDIGO
+               </button>
+           </form>
+
+           <p style="font-size: 12px; color: #64748b; margin-top: 20px;">
+               Suporte: contato@lexopsinsight.com.br
+           </p>
+       </div>
+   </div>
+
+   <div id="dashboard" class="hidden">
+       <!-- Seu conteúdo do dashboard aqui -->
+   </div>
+
    <div id="login-screen" style="display:none; position:fixed; inset:0; background:#0f172a; z-index:99999; flex-direction:column; align-items:center; justify-content:center; text-align:center; font-family: 'Inter', sans-serif;">
     <div style="background:white; padding:40px; border-radius:16px; max-width:420px; width:90%; box-shadow:0 20px 50px -10px rgba(0,0,0,0.2); backdrop-filter:blur(10px);">
         <div style="margin-bottom:30px; text-align:center;">
@@ -2271,6 +2433,71 @@
         function closeDetail() { document.getElementById('detailModal').classList.replace('flex','hidden'); }
 
     </script>
+
+    <script>
+async function handleAuthSubmit(event) {
+    event.preventDefault();
+    
+    const token = document.getElementById('token-input').value.trim().toUpperCase();
+    const submitBtn = document.getElementById('submit-btn');
+    
+    submitBtn.disabled = true;
+    submitBtn.textContent = 'Verificando...';
+    
+    try {
+        // 1️⃣ ENVIA PARA VALIDATE-TOKEN
+        const response = await fetch(
+            `/.netlify/functions/validate-token?token=${encodeURIComponent(token)}`
+        );
+        
+        // 2️⃣ RECEBE RESPOSTA DO SERVIDOR
+        const data = await response.json();
+        
+        // 3️⃣ VERIFICA SE VÁLIDO
+        if (response.ok && data.valid) {
+            // ✅ LIBERA ACESSO
+            document.getElementById('auth-screen').style.display = 'none';
+            document.getElementById('dashboard').style.display = 'block';
+            
+            // Salva sessão
+            localStorage.setItem('lexops_token', JSON.stringify({
+                token: token,
+                expires: Date.now() + (24 * 60 * 60 * 1000)
+            }));
+        } else {
+            // ❌ MOSTRA ERRO
+            alert('❌ ' + (data.message || 'Código inválido'));
+            submitBtn.disabled = false;
+            submitBtn.textContent = 'VALIDAR CÓDIGO';
+        }
+    } catch (err) {
+        alert('❌ Erro ao validar: ' + err.message);
+        submitBtn.disabled = false;
+        submitBtn.textContent = 'VALIDAR CÓDIGO';
+    }
+    
+    return false;
+}
+
+// Verifica se já tem sessão ao carregar
+window.addEventListener('load', () => {
+    const session = localStorage.getItem('lexops_token');
+    if (session) {
+        try {
+            const { expires } = JSON.parse(session);
+            if (Date.now() < expires) {
+                // Sessão válida, libera acesso
+                document.getElementById('auth-screen').style.display = 'none';
+                document.getElementById('dashboard').style.display = 'block';
+                return;
+            }
+        } catch (e) {}
+    }
+    // Sem sessão válida, mostra bloqueio
+    document.getElementById('auth-screen').style.display = 'flex';
+    document.getElementById('dashboard').style.display = 'none';
+});
+</script>
 
     </div>
 </body>
