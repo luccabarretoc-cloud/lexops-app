@@ -13,12 +13,57 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="assets/css/app.css">
 
-    <script id="consolidated-data" type="application/json"></script>
+   <script type="module">
+    import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm'
 
-    <script>
-        tailwind.config = {
-            theme: {
-                extend: {
+    // 1. CONFIGURAÇÃO DO SEU PROJETO LEXOPSINSIGHT
+    const SUPABASE_URL = 'https://amwjnkitkxtwqzsxnoin.supabase.co';
+    const SUPABASE_KEY = 'sb_publishable_OqGyqzS5tnO0qLt86dK38A_t53QT5PR';
+    const supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
+
+    // 2. O PORTEIRO (VALIDAÇÃO DE ACESSO)
+    async function validarAcesso() {
+        const params = new URLSearchParams(window.location.search);
+        const token = params.get('token');
+
+        // Se não houver token na URL, bloqueia tudo imediatamente
+        if (!token) {
+            document.body.innerHTML = `
+                <div style="background:#0f172a; color:white; height:100vh; display:flex; align-items:center; justify-content:center; font-family:sans-serif; text-align:center; padding:20px;">
+                    <div>
+                        <h1 style="font-size:24px; margin-bottom:10px;">Acesso Restrito</h1>
+                        <p style="color:#94a3b8;">Por favor, acesse através do link exclusivo enviado para o seu e-mail.</p>
+                        <a href="https://lexopsinsight.com.br" style="color:#3b82f6; text-decoration:none; margin-top:20px; display:inline-block;">Voltar para o site</a>
+                    </div>
+                </div>`;
+            return;
+        }
+
+        // Consulta no Supabase se o token existe e está ativo
+        const { data, error } = await supabase
+            .from('usuarios_assinantes')
+            .select('status')
+            .eq('token', token)
+            .eq('status', 'active')
+            .single();
+
+        if (error || !data) {
+            alert("Token inválido ou assinatura inativa.");
+            window.location.href = "https://lexopsinsight.com.br";
+            return;
+        }
+
+        console.log("LexOpsInsight: Acesso autorizado via Kiwify.");
+    }
+
+    // Executa a validação
+    validarAcesso();
+</script>
+
+<script>
+    tailwind.config = {
+        theme: {
+            extend: {
                     fontFamily: { sans: ['Inter', 'system-ui', 'sans-serif'] },
                     colors: {
                         brand: { 500: 'var(--brand-500)', 600: 'var(--brand-600)' }
