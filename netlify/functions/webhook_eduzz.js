@@ -1,29 +1,22 @@
 const { createClient } = require('@supabase/supabase-js');
-
-// Puxa as chaves das variáveis de ambiente da Netlify (Segurança Total)
 const supabase = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_SERVICE_KEY);
 
 exports.handler = async (event) => {
-    // Responde 200 para testes da Eduzz
-    if (event.httpMethod === "OPTIONS") {
-        return { statusCode: 200, body: "OK" };
-    }
+    if (event.httpMethod === "OPTIONS") return { statusCode: 200, body: "OK" };
 
     try {
         const body = JSON.parse(event.body);
         
-        // Dados específicos da Eduzz
-        const token = body.fatura_id; 
-        const email = body.cus_email;
-        const status = body.fatura_status; // 3 é Pago na Eduzz
+        // MAPEAMENTO EXATO EDUZZ
+        // A Eduzz envia 'transaction' ou 'fatura_id'. Vamos capturar o ID da transação.
+        const token = body.transaction || body.fatura_id; 
+        const email = body.cus_email || body.email;
+        const status = body.status || body.fatura_status; 
 
-        // Se for o teste da Eduzz ou faltar dados, apenas confirma o recebimento
-        if (!email || !token) {
-            return { statusCode: 200, body: "Teste recebido com sucesso!" };
-        }
+        if (!token) return { statusCode: 200, body: "Evento sem transação ignorado." };
 
-        // SÓ SALVA SE O STATUS FOR PAGO (Status 3)
-        if (status == 3) {
+        // Na Eduzz, o status 3 significa "Pago"
+        if (status == 3 || status == "pago" || status == "paid") {
             const { error } = await supabase
                 .from('usuarios_assinantes')
                 .insert([{ 
@@ -32,15 +25,11 @@ exports.handler = async (event) => {
                     status: 'pago' 
                 }]);
 
-            if (error) throw error;
-            console.log(`Sucesso: Acesso liberado para ${email}`);
+            if (error) console.error("Erro Supabase:", error);
         }
 
-        return { statusCode: 200, body: "Webhook processado" };
-
+        return { statusCode: 200, body: "OK" };
     } catch (err) {
-        console.error("Erro no Webhook:", err);
-        // Retornamos 200 para a Eduzz não desativar o seu endpoint por erro
-        return { statusCode: 200, body: `Erro interno: ${err.message}` };
+        return { statusCode: 200, body: "Erro processado" };
     }
 };
