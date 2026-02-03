@@ -471,69 +471,123 @@
     </style>
 
     <style>
-        #auth-screen {
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            min-height: 100vh;
+        /* ESTILOS DO MODAL DE VALIDAÇÃO */
+        .token-modal-overlay {
             position: fixed;
             top: 0;
             left: 0;
             right: 0;
             bottom: 0;
-            background: linear-gradient(135deg, #020617 0%, #0f172a 100%);
+            background: rgba(0, 0, 0, 0.7);
+            display: flex;
+            align-items: center;
+            justify-content: center;
             z-index: 9999;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
         }
 
-        #auth-screen.hidden {
-            display: none;
+        .token-modal-container {
+            background: white;
+            padding: 40px;
+            border-radius: 12px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            max-width: 400px;
+            width: 90%;
+            text-align: center;
         }
 
-        #dashboard.hidden {
-            display: none;
+        .token-modal-container h2 {
+            margin: 0 0 10px 0;
+            color: #333;
+            font-size: 24px;
+        }
+
+        .token-modal-container p {
+            margin: 0 0 30px 0;
+            color: #666;
+            font-size: 14px;
+        }
+
+        #tokenForm {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        #transactionCode {
+            padding: 12px 16px;
+            font-size: 14px;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            transition: border-color 0.3s;
+        }
+
+        #transactionCode:focus {
+            outline: none;
+            border-color: #0284c7;
+            box-shadow: 0 0 0 3px rgba(2, 132, 199, 0.1);
+        }
+
+        .token-submit-btn {
+            padding: 12px 20px;
+            font-size: 14px;
+            font-weight: 600;
+            background: #0284c7;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: background 0.3s;
+        }
+
+        .token-submit-btn:hover {
+            background: #0369a1;
+        }
+
+        .token-submit-btn:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+        }
+
+        .token-error {
+            color: #dc2626;
+            font-size: 13px;
+            margin-top: 12px;
+            min-height: 20px;
+        }
+
+        .token-loading {
+            color: #0284c7;
+            font-size: 13px;
+            margin-top: 12px;
         }
     </style>
 
     </head>
 <body class="font-sans text-sm">
-   <div id="auth-screen">
-       <div style="max-width: 420px; text-align: center; padding: 40px; 
-                   border: 1px solid rgba(100, 116, 139, 0.3);
-                   border-radius: 24px; background: rgba(15, 23, 42, 0.8);
-                   color: white;">
-           
-           <h1 style="font-size: 26px; margin-bottom: 20px;">🔒 LexOpsInsight</h1>
-           <p style="color: #94a3b8; margin-bottom: 30px;">
-               Digite seu código de transação Eduzz
-           </p>
-
-           <form onsubmit="return handleAuthSubmit(event)">
-               <input 
-                   type="text" 
-                   id="token-input" 
-                   placeholder="Ex: 56902318"
-                   style="width: 100%; padding: 12px; margin-bottom: 15px;
-                          border: 2px solid #334155; border-radius: 8px;
-                          background: rgba(2, 6, 23, 0.8); color: white;
-                          text-align: center; font-family: monospace;"
-                   required
-               >
-               <button type="submit" id="submit-btn"
-                       style="width: 100%; padding: 12px; background: #7c3aed;
-                              color: white; border: none; border-radius: 8px;
-                              font-weight: bold; cursor: pointer;">
-                   VALIDAR CÓDIGO
-               </button>
-           </form>
-
-           <p style="font-size: 12px; color: #64748b; margin-top: 20px;">
-               Suporte: contato@lexopsinsight.com.br
-           </p>
+   <div id="tokenModal" class="token-modal-overlay">
+     <div class="token-modal-container">
+       <h2>Acesso Restrito</h2>
+       <p>Digite seu código de transação para acessar</p>
+       
+       <form id="tokenForm" onsubmit="validateToken(event)">
+         <input 
+           type="text" 
+           id="transactionCode" 
+           placeholder="Código de Transação (Eduzz)"
+           required
+           autocomplete="off"
+         />
+         <button type="submit" class="token-submit-btn">
+           Validar Código
+         </button>
+       </form>
+       
+       <div id="tokenError" class="token-error"></div>
+       <div id="tokenLoading" class="token-loading" style="display:none;">
+         Validando código...
        </div>
-   </div>
-
-   <div id="dashboard" class="hidden">
-       <!-- Seu conteúdo do dashboard aqui -->
+     </div>
    </div>
 
    <div id="login-screen" style="display:none; position:fixed; inset:0; background:#0f172a; z-index:99999; flex-direction:column; align-items:center; justify-content:center; text-align:center; font-family: 'Inter', sans-serif;">
@@ -2435,71 +2489,85 @@
     </script>
 
     <script>
-async function handleAuthSubmit(event) {
-    event.preventDefault();
+// Função para validar token com Netlify Function
+async function validateToken(event) {
+  event.preventDefault();
+  
+  const code = document.getElementById('transactionCode').value.trim();
+  const loadingDiv = document.getElementById('tokenLoading');
+  const errorDiv = document.getElementById('tokenError');
+  const submitBtn = event.target.querySelector('button[type="submit"]');
+  
+  // Limpar erros anteriores
+  errorDiv.textContent = '';
+  
+  // Mostrar loading
+  loadingDiv.style.display = 'block';
+  submitBtn.disabled = true;
+  
+  try {
+    // Chamar a função Netlify
+    const response = await fetch('/.netlify/functions/validate-token', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ code: code })
+    });
     
-    const token = document.getElementById('token-input').value.trim().toUpperCase();
-    const submitBtn = document.getElementById('submit-btn');
+    const data = await response.json();
     
-    submitBtn.disabled = true;
-    submitBtn.textContent = 'Verificando...';
-    
-    try {
-        // 1️⃣ ENVIA PARA VALIDATE-TOKEN
-        const response = await fetch(
-            `/.netlify/functions/validate-token?token=${encodeURIComponent(token)}`
-        );
-        
-        // 2️⃣ RECEBE RESPOSTA DO SERVIDOR
-        const data = await response.json();
-        
-        // 3️⃣ VERIFICA SE VÁLIDO
-        if (response.ok && data.valid) {
-            // ✅ LIBERA ACESSO
-            document.getElementById('auth-screen').style.display = 'none';
-            document.getElementById('dashboard').style.display = 'block';
-            
-            // Salva sessão
-            localStorage.setItem('lexops_token', JSON.stringify({
-                token: token,
-                expires: Date.now() + (24 * 60 * 60 * 1000)
-            }));
-        } else {
-            // ❌ MOSTRA ERRO
-            alert('❌ ' + (data.message || 'Código inválido'));
-            submitBtn.disabled = false;
-            submitBtn.textContent = 'VALIDAR CÓDIGO';
-        }
-    } catch (err) {
-        alert('❌ Erro ao validar: ' + err.message);
-        submitBtn.disabled = false;
-        submitBtn.textContent = 'VALIDAR CÓDIGO';
+    if (data.valid) {
+      // Token válido - liberar acesso
+      localStorage.setItem('lexopsToken', code);
+      document.getElementById('tokenModal').style.display = 'none';
+      document.body.classList.remove('token-locked');
+    } else {
+      // Token inválido
+      errorDiv.textContent = data.message || 'Código inválido. Tente novamente.';
+      submitBtn.disabled = false;
+      loadingDiv.style.display = 'none';
     }
-    
-    return false;
+  } catch (error) {
+    errorDiv.textContent = 'Erro ao validar código. Tente novamente.';
+    submitBtn.disabled = false;
+    loadingDiv.style.display = 'none';
+    console.error('Erro:', error);
+  }
 }
 
-// Verifica se já tem sessão ao carregar
-window.addEventListener('load', () => {
-    const session = localStorage.getItem('lexops_token');
-    if (session) {
-        try {
-            const { expires } = JSON.parse(session);
-            if (Date.now() < expires) {
-                // Sessão válida, libera acesso
-                document.getElementById('auth-screen').style.display = 'none';
-                document.getElementById('dashboard').style.display = 'block';
-                return;
-            }
-        } catch (e) {}
-    }
-    // Sem sessão válida, mostra bloqueio
-    document.getElementById('auth-screen').style.display = 'flex';
-    document.getElementById('dashboard').style.display = 'none';
+// Verificar se usuário já tem token válido ao carregar
+document.addEventListener('DOMContentLoaded', function() {
+  const savedToken = localStorage.getItem('lexopsToken');
+  
+  if (savedToken) {
+    // Revalidar token ao carregar página
+    fetch('/.netlify/functions/validate-token', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ code: savedToken })
+    })
+    .then(response => response.json())
+    .then(data => {
+      if (data.valid) {
+        document.getElementById('tokenModal').style.display = 'none';
+      } else {
+        localStorage.removeItem('lexopsToken');
+        document.getElementById('tokenModal').style.display = 'flex';
+      }
+    })
+    .catch(error => {
+      console.error('Erro ao validar token salvo:', error);
+      document.getElementById('tokenModal').style.display = 'flex';
+    });
+  } else {
+    // Mostrar modal se não houver token
+    document.getElementById('tokenModal').style.display = 'flex';
+  }
 });
-</script>
 
-    </div>
-</body>
-</html>
+
+    </script>
 
