@@ -1,3 +1,9 @@
 [build]
   publish = "app"
   functions = "netlify/functions"
+[build]
+  publish = "app"
+  functions = "netlify/functions"
+
+[functions]
+  node_bundle = true
