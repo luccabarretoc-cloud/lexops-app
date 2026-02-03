@@ -5,59 +5,33 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Dashboard Jurídico | LexOpsInsight</title>
     
-    <style id="anti-flash">
-        body { display: none !important; }
-    </style>
-
     <script>
       (async function() {
         const urlParams = new URLSearchParams(window.location.search);
         const token = urlParams.get('token');
 
-        // Função para mostrar a tela de login SEM apagar o resto do arquivo
-        const forceLogin = (msg = "Área do Assinante", isError = false) => {
-            document.addEventListener("DOMContentLoaded", () => {
-                document.body.innerHTML = `
-                <div style="background:#020617;color:white;display:flex;justify-content:center;align-items:center;height:100vh;width:100vw;font-family:sans-serif;position:fixed;top:0;left:0;z-index:999999;">
-                  <div style="text-align:center;padding:40px;border:1px solid ${isError ? '#ef4444' : '#1e293b'};border-radius:24px;background:#0f172a;max-width:400px;width:90%;box-shadow:0 20px 50px rgba(0,0,0,0.5);">
-                    <div style="background:${isError ? '#ef4444' : '#7c3aed'};width:60px;height:60px;border-radius:50%;display:flex;justify-content:center;align-items:center;margin:0 auto 25px;">
-                       <span style="font-size:30px;">${isError ? '✕' : '🔒'}</span>
-                    </div>
-                    <h1 style="font-size:22px;margin-bottom:10px;font-weight:800;">${msg}</h1>
-                    <p style="color:#94a3b8;margin-bottom:30px;font-size:14px;line-height:1.5;">Insira o Código de Transação (Eduzz) para acessar.</p>
-                    <form onsubmit="event.preventDefault(); window.location.href='?token=' + document.getElementById('tkn').value.trim().toUpperCase()">
-                      <input type="text" id="tkn" placeholder="Ex: 56902318" required style="width:100%;padding:15px;border-radius:12px;border:1px solid #334155;background:#020617;color:white;margin-bottom:20px;box-sizing:border-box;text-align:center;font-size:16px;">
-                      <button type="submit" style="width:100%;background:#7c3aed;color:white;padding:15px;border:none;border-radius:12px;font-weight:bold;cursor:pointer;">VALIDAR CÓDIGO DE TRANSAÇÃO</button>
-                    </form>
-                  </div>
-                </div>`;
-                document.body.style.display = 'block';
-            });
-        };
-
         if (!token) {
-            forceLogin();
-            return;
+          // Sem token: mostra a tela roxa
+          document.documentElement.style.display = 'block';
+          document.body.style.display = 'block';
+          return;
         }
 
         try {
-            // Chama sua função validate-token no Netlify
             const response = await fetch('/.netlify/functions/validate-token?token=' + token);
             const data = await response.json();
 
             if (data.valid) {
-                // TOKEN VÁLIDO: Remove o bloqueio e mostra o dashboard original
-                document.addEventListener("DOMContentLoaded", () => {
-                    const styleTag = document.getElementById('anti-flash');
-                    if (styleTag) styleTag.remove();
-                    document.body.style.display = 'block';
-                });
+                // Token válido: libera acesso
+                document.documentElement.style.display = 'block';
+                document.body.style.display = 'block';
             } else {
-                forceLogin(data.message || "Código Inválido", true);
+                // Token inválido: redireciona sem token
+                window.location.href = '/';
             }
         } catch (err) {
             console.error("Erro na validação:", err);
-            forceLogin("Erro de Conexão", true);
+            window.location.href = '/';
         }
       })();
     </script>
