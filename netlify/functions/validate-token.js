@@ -48,16 +48,35 @@ exports.handler = async (event) => {
     }
 
     console.log('[validate-token] Consultando tabela access_tokens...');
+    
+    // Primeiro, tenta buscar o token específico
     const { data, error } = await supabase
       .from("access_tokens")
       .select("*")
-      .eq("token", token)
-      .single();
+      .eq("token", token);
 
-    console.log('[validate-token] Resposta:', error ? '❌ Erro' : '✓ Sucesso');
+    console.log('[validate-token] Token procurado:', token);
+    console.log('[validate-token] Erro:', error?.message || 'Nenhum');
+    console.log('[validate-token] Total de registros encontrados:', data?.length || 0);
+    if (data?.length > 0) {
+      console.log('[validate-token] Primeiro registro:', JSON.stringify(data[0]));
+    }
 
     if (error) {
-      console.log('[validate-token] ❌ Token não encontrado');
+      console.log('[validate-token] ❌ Erro na consulta:', error.message);
+      return { 
+        statusCode: 403, 
+        headers,
+        body: JSON.stringify({ 
+          valid: false, 
+          message: "Erro ao buscar token: " + error.message 
+        }) 
+      };
+    }
+
+    // Se não encontrou nenhum registro
+    if (!data || data.length === 0) {
+      console.log('[validate-token] ❌ Token não encontrado na tabela');
       return { 
         statusCode: 403, 
         headers,
@@ -68,23 +87,14 @@ exports.handler = async (event) => {
       };
     }
 
-    if (!data) {
-      console.log('[validate-token] ❌ Nenhum registro encontrado');
-      return { 
-        statusCode: 403, 
-        headers,
-        body: JSON.stringify({ 
-          valid: false, 
-          message: "Código de transação inválido ou não encontrado." 
-        }) 
-      };
-    }
+    // Pega o primeiro registro encontrado
+    const foundData = data[0];
 
     console.log('[validate-token] ✓ Token encontrado!');
 
-    if (data.expires_at) {
+    if (foundData.expires_at) {
       const now = new Date();
-      const expiresAt = new Date(data.expires_at);
+      const expiresAt = new Date(foundData.expires_at);
       
       if (expiresAt < now) {
         console.log('[validate-token] ❌ Token expirado');
@@ -99,12 +109,12 @@ exports.handler = async (event) => {
       }
     }
 
-    if (data.status) {
-      const statusLower = String(data.status).toLowerCase();
+    if (foundData.status) {
+      const statusLower = String(foundData.status).toLowerCase();
       const validStatuses = ['active', 'pago', 'paid', 'valid', 'approved'];
       
       if (!validStatuses.includes(statusLower)) {
-        console.log('[validate-token] ❌ Status não permitido:', data.status);
+        console.log('[validate-token] ❌ Status não permitido:', foundData.status);
         return { 
           statusCode: 403, 
           headers,
@@ -122,8 +132,8 @@ exports.handler = async (event) => {
       headers,
       body: JSON.stringify({ 
         valid: true, 
-        email: data.email || "usuário",
-        customer_name: data.customer_name || "Cliente"
+        email: foundData.email || "usuário",
+        customer_name: foundData.customer_name || "Cliente"
       })
     };
 
