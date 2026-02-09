@@ -35,7 +35,7 @@ exports.handler = async (event) => {
       };
     }
 
-    if (!process.env.SUPABASE_URL || !process.env.SUPABASE_SERVICE_KEY) {
+    if (!process.env.SUPABASE_URL || !process.env.SUPABASE_SERVICE_ROLE_KEY) {
       console.log('[validate-token] ❌ Variáveis de ambiente não configuradas');
       return { 
         statusCode: 500, 
