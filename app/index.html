@@ -10,7 +10,12 @@
         console.log('[Auth] DOM Carregado, iniciando validação...');
         
         const urlParams = new URLSearchParams(window.location.search);
-        const token = urlParams.get('token');
+        // Aceita múltiplos nomes de parâmetro para o token
+        const token = urlParams.get('token') || 
+                      urlParams.get('transactionkey') || 
+                      urlParams.get('chave') ||
+                      urlParams.get('invoice_id') ||
+                      urlParams.get('edz_fat_cod');
 
         document.documentElement.style.display = 'block';
         document.body.style.display = 'block';

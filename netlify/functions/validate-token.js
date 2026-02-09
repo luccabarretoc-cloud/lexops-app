@@ -127,6 +127,31 @@ exports.handler = async (event) => {
     }
 
     console.log('[validate-token] ✅ VALIDAÇÃO SUCESSO');
+    
+    // ─── Enviar email com o token (opcional) ───
+    if (foundData.email && process.env.RESEND_API_KEY) {
+      console.log('[validate-token] 📧 Enviando email para:', foundData.email);
+      try {
+        // Chama a function send-email via fetch
+        const sendEmailUrl = `${event.headers.origin || 'https://' + event.headers.host}/.netlify/functions/send-email`;
+        await fetch(sendEmailUrl, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            email: foundData.email,
+            token: token,
+            nome: foundData.customer_name || foundData.nome || "Cliente"
+          })
+        }).then(r => r.json()).then(data => {
+          console.log('[validate-token] ✅ Email enviado:', data);
+        }).catch(err => {
+          console.log('[validate-token] ⚠️ Erro ao enviar email:', err.message);
+        });
+      } catch (emailErr) {
+        console.log('[validate-token] ⚠️ Erro ao disparar email:', emailErr.message);
+      }
+    }
+
     return {
       statusCode: 200,
       headers,
